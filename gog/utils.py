@@ -10,7 +10,9 @@ from gog.structure.graph import StaticGraphs, Graph
 def get_dataframe(filecount):
     dataframes = []
     for i in range(1, filecount):
-        directory = f"../data/{i}"
+        directory = f"data/{i}"
+        if i % 500 == 0:
+            print(f"Handled {i} files")
         for filename in os.listdir(directory):
             if filename.endswith(".csv") and not filename.startswith("Simulation"):
                 f = os.path.join(directory, filename)
@@ -24,7 +26,7 @@ def get_dataframe(filecount):
 
 
 def get_edges():
-    adm_data = pd.read_csv("../AdmittanceMatrix_50Hz.csv",
+    adm_data = pd.read_csv("AdmittanceMatrix_50Hz.csv",
                            delimiter=";",
                            header=None).iloc[1:, 1:-1].astype(complex).reset_index(drop=True)
     adm_data.columns = range(adm_data.columns.size)
