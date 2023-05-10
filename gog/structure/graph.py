@@ -19,9 +19,16 @@ class Graph:
         self.node_feature_names: List = node_feature_names
 
     @staticmethod
-    def _set_node_features(data: pd.DataFrame, node_feature_names: List[str]):
+    def _set_node_features(data: pd.DataFrame | np.ndarray, node_feature_names: List[str]):
+        if type(data) == np.ndarray:
+            return data
         data.sort_values(by="Node")
         return data[node_feature_names].to_numpy()
+
+    def __copy__(self):
+        copy = type(self)(self.node_features, self.node_feature_names)
+        self.node_features = self.node_features.copy()
+        return copy
 
 
 class StaticGraphs:

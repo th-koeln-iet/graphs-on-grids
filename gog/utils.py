@@ -53,7 +53,8 @@ def create_train_test_split(graphs: StaticGraphs, train_size=0.8, random_state=N
 
 
 def mask_labels(X_train: List[Graph], X_test: List[Graph], targets: List[str], nodes: List, method: str = "zeros"):
-    X_train_mask, X_test_mask = X_train.copy(), X_test.copy()
+    X_train_mask, X_test_mask = [graph.__copy__() for graph in X_train].copy(), [graph.__copy__() for graph in
+                                                                                 X_test].copy()
     return _mask_split(X_train_mask, targets, nodes, method), _mask_split(X_test_mask, targets, nodes, method)
 
 
@@ -61,7 +62,8 @@ def _mask_split(split: List[Graph], targets: List[str], nodes: List, method: str
     for instance in split:
         feature_matrix = instance.node_features
         feature_indices = [instance.node_feature_names.index(feature_name) for feature_name in targets]
-        for row in feature_matrix:
-            if row in nodes:
-                if method is "zeros":
+        for i, row in enumerate(feature_matrix):
+            if i in nodes:
+                if method == "zeros":
                     row[feature_indices] = 0
+    return split
