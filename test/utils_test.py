@@ -1,6 +1,6 @@
 import pandas as pd
 
-from gog.structure.graph import StaticGraphs, Graph
+from gog.structure.graph import StaticGraphDataset, Graph
 from gog.utils import create_train_test_split, mask_labels
 
 
@@ -14,7 +14,7 @@ class TestUtils:
         for i in range(5):
             g = Graph(df, feature_names[:2])
             graphs.append(g)
-        dataset = StaticGraphs(edge_list=[[0, 2], [0, 3], [3, 1], [2, 4], [2, 3]], graphs=graphs)
+        dataset = StaticGraphDataset(edge_list=[[0, 2], [0, 3], [3, 1], [2, 4], [2, 3]], graphs=graphs)
         cls.dataset = dataset
 
     def test_create_train_test_split(self):

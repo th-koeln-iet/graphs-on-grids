@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from gog.structure.graph import StaticGraphs, Graph
+from gog.structure.graph import StaticGraphDataset, Graph
 
 
 def get_dataframe(filecount):
@@ -43,15 +43,32 @@ def get_edges():
     return edges
 
 
-def create_train_test_split(graphs: StaticGraphs, train_size=0.8, random_state=None, shuffle=True):
-    graph_list = graphs.graphs
+def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_state=None, shuffle=True):
+    graph_list = dataset.graphs
     num_graphs = len(graph_list)
     if shuffle:
         np.random.seed(random_state)
         np.random.shuffle(graph_list)
     last_train_index = int(num_graphs * train_size)
     train, test = graph_list[0:last_train_index], graph_list[last_train_index:num_graphs + 1]
+    dataset.set_splits(train=train, test=test)
     return train, test
+
+
+def create_train_val_test_split(dataset: StaticGraphDataset, train_size=0.65, validation_size=0.15, random_state=None,
+                                shuffle=True):
+    graph_list = dataset.graphs
+    num_graphs = len(graph_list)
+    if shuffle:
+        np.random.seed(random_state)
+        np.random.shuffle(graph_list)
+    last_train_index = int(num_graphs * train_size)
+    last_val_index = int(last_train_index + num_graphs * validation_size)
+    train, val, test = graph_list[0:last_train_index], \
+        graph_list[last_train_index + 1: last_val_index], \
+        graph_list[last_train_index:num_graphs + 1]
+    dataset.set_splits(train=train, val=val, test=test)
+    return train, val, test
 
 
 def mask_labels(X_train: List[Graph], X_test: List[Graph], targets: List[str], nodes: List, method: str = "zeros"):
