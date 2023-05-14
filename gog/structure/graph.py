@@ -22,12 +22,12 @@ class Graph:
     def _set_node_features(data: pd.DataFrame | np.ndarray, node_feature_names: List[str]) -> np.ndarray:
         if type(data) == np.ndarray:
             return data
-        data.sort_values(by="Node")
         return data[node_feature_names].to_numpy()
 
     def __copy__(self):
         copy = type(self)(self.node_features, self.node_feature_names)
         self.node_features = self.node_features.copy()
+        self.node_feature_names = self.node_feature_names.copy()
         return copy
 
 
@@ -37,9 +37,18 @@ class StaticGraphDataset:
         self.test = None
         self.val = None
         self.train = None
+        self.scaler = None
         self.adjacency_matrix = _edge_list_to_adj(edge_list)
         self.graphs = graphs
         self._validate_node_features()
+
+    @staticmethod
+    def pandas_to_graphs(df: pd.DataFrame, num_nodes: int, features: List[str]):
+        graph_list = []
+        for i in range(0, df.shape[0], num_nodes):
+            df_tmp = df.iloc[i:i + num_nodes].copy()
+            graph_list.append(Graph(df_tmp, features))
+        return graph_list
 
     def _validate_node_features(self):
         if self.graphs:
@@ -68,3 +77,6 @@ class StaticGraphDataset:
         self.set_train_split(train)
         self.set_validation_split(val)
         self.set_test_split(test)
+
+    def get_splits(self):
+        return self.train, self.val, self.test

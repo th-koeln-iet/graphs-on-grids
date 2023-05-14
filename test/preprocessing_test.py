@@ -1,10 +1,10 @@
 import pandas as pd
 
+from gog.preprocessing import create_train_test_split, mask_labels
 from gog.structure.graph import StaticGraphDataset, Graph
-from gog.utils import create_train_test_split, mask_labels
 
 
-class TestUtils:
+class TestPreprocessing:
     @classmethod
     def setup_method(cls):
         feature_names = ["A", "B", "Node"]

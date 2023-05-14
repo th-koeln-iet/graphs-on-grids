@@ -1,28 +1,36 @@
 import os
-from typing import List
 
 import numpy as np
 import pandas as pd
 
-from gog.structure.graph import StaticGraphDataset, Graph
+from gog.structure.graph import StaticGraphDataset
 
 
-def get_dataframe(filecount):
+def data_to_parquet(filecount):
     dataframes = []
-    for i in range(1, filecount):
+    output_path = f"{filecount}_graphs.parquet.gzip"
+    for i in range(1, filecount + 1):
         directory = f"data/{i}"
-        if i % 500 == 0:
-            print(f"Handled {i} files")
+        if not os.path.exists(directory):
+            print(f"Directory {directory} not found.")
+            continue
         for filename in os.listdir(directory):
-            if filename.endswith(".csv") and not filename.startswith("Simulation"):
+            if filename.endswith(".csv") and not filename.startswith("S"):
                 f = os.path.join(directory, filename)
                 df = pd.read_csv(f)
                 split_name = filename.split("CIGRE_Low_Voltage_Mon_monitoratbus")[1]
                 node_num = split_name.split("_")[0]
-                df["Node"] = node_num
+                df["Node"] = int(node_num)
                 df["Timestep"] = i
                 dataframes.append(df)
-    return pd.concat(dataframes, ignore_index=True)
+        if i % 500 == 0:
+            print(f"Handled {i} files")
+            if os.path.isfile(output_path):
+                pd.concat(dataframes).to_parquet(output_path, engine="fastparquet", index=False, compression="gzip",
+                                                 append=True)
+            else:
+                pd.concat(dataframes).to_parquet(output_path, engine="fastparquet", index=False, compression="gzip")
+            dataframes = []
 
 
 def get_edges():
@@ -43,18 +51,6 @@ def get_edges():
     return edges
 
 
-def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_state=None, shuffle=True):
-    graph_list = dataset.graphs
-    num_graphs = len(graph_list)
-    if shuffle:
-        np.random.seed(random_state)
-        np.random.shuffle(graph_list)
-    last_train_index = int(num_graphs * train_size)
-    train, test = graph_list[0:last_train_index], graph_list[last_train_index:num_graphs + 1]
-    dataset.set_splits(train=train, test=test)
-    return train, test
-
-
 def create_train_val_test_split(dataset: StaticGraphDataset, train_size=0.65, validation_size=0.15, random_state=None,
                                 shuffle=True):
     graph_list = dataset.graphs
@@ -69,20 +65,3 @@ def create_train_val_test_split(dataset: StaticGraphDataset, train_size=0.65, va
         graph_list[last_train_index:num_graphs + 1]
     dataset.set_splits(train=train, val=val, test=test)
     return train, val, test
-
-
-def mask_labels(X_train: List[Graph], X_test: List[Graph], targets: List[str], nodes: List, method: str = "zeros"):
-    X_train_mask, X_test_mask = [graph.__copy__() for graph in X_train].copy(), [graph.__copy__() for graph in
-                                                                                 X_test].copy()
-    return _mask_split(X_train_mask, targets, nodes, method), _mask_split(X_test_mask, targets, nodes, method)
-
-
-def _mask_split(split: List[Graph], targets: List[str], nodes: List, method: str):
-    for instance in split:
-        feature_matrix = instance.node_features
-        feature_indices = [instance.node_feature_names.index(feature_name) for feature_name in targets]
-        for i, row in enumerate(feature_matrix):
-            if i in nodes:
-                if method == "zeros":
-                    row[feature_indices] = 0
-    return split
