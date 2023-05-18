@@ -31,7 +31,8 @@ class GNN(keras.layers.Layer):
         self.W = self.add_weight(
             shape=(input_shape[-1], self.embedding_size), initializer=self.weight_initializer, trainable=True
         )
-        self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer, trainable=True)
+        if self.use_bias:
+            self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer, trainable=True)
 
     def call(self, inputs, *args, **kwargs):
         masked_feature_matrix = tf.matmul(self._A_tilde, inputs)

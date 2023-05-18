@@ -6,8 +6,9 @@ from tensorflow import keras
 class GAT(keras.layers.Layer):
 
     def __init__(self, adjacency_matrix: np.ndarray, embedding_size, use_bias=True, activation=None,
-                 weight_initializer="glorot_uniform", bias_initializer="zeros"):
+                 weight_initializer="glorot_uniform", kernel_regularizer=None, bias_initializer="zeros"):
         super(GAT, self).__init__()
+
         self.embedding_size = int(embedding_size) if not isinstance(embedding_size, int) else embedding_size
         if embedding_size <= 0:
             raise ValueError(
@@ -17,6 +18,7 @@ class GAT(keras.layers.Layer):
         self.use_bias = use_bias
         self.activation = keras.activations.get(activation)
         self.weight_initializer = keras.initializers.get(weight_initializer)
+        self.kernel_regularizer = keras.regularizers.get(kernel_regularizer)
         self.bias_initializer = keras.initializers.get(bias_initializer)
 
         # Adjacency matrix with self loops
@@ -27,17 +29,19 @@ class GAT(keras.layers.Layer):
 
     def build(self, input_shape):
         self.W = self.add_weight(
-            shape=(input_shape[-1], self.embedding_size), initializer=self.weight_initializer, trainable=True,
+            shape=(input_shape[-1], self.embedding_size), initializer=self.weight_initializer,
+            regularizer=self.kernel_regularizer, trainable=True,
             name="weight_kernel"
         )
-        # self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer, trainable=True,
-        #                          name="bias_vector")
+        if self.use_bias:
+            self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer,
+                                     regularizer=self.kernel_regularizer, trainable=True,
+                                     name="bias_vector")
         self.W_attn = self.add_weight(shape=(2 * self.embedding_size, 1),
-                                      initializer=keras.initializers.GlorotUniform(seed=43),
+                                      initializer=self.weight_initializer, regularizer=self.kernel_regularizer,
                                       trainable=True, name="attention_kernel")
 
     def call(self, inputs, *args, **kwargs):
-        edges_for_batch = tf.repeat(np.array([self.edges]), [tf.shape(inputs)[0]], axis=0)
         # Linearly transform node states
         node_states_transformed = tf.matmul(inputs, self.W)
         # (1) Compute pair-wise attention scores
@@ -61,14 +65,16 @@ class GAT(keras.layers.Layer):
             attention_scores_sum, tf.math.bincount(tf.cast(self.edges[:, 0], "int32"))
         )
         attention_scores_norm = attention_scores / attention_scores_sum
-        # (3) Gather node states of neighbors, apply attention scores and aggregate
-        node_states_neighbors = tf.gather(node_states_transformed, self.edges[:, 1], axis=1)
+        # (3) apply attention scores and aggregate
+        # first attention score can be taken since the attention values are equal for the whole batch
+        # write normalized attention scores to position where adjacency_matrix equals one
+        weighted_adj = tf.tensor_scatter_nd_update(self._A_tilde, self.edges, attention_scores_norm[0])
+        output = tf.matmul(weighted_adj, node_states_transformed)
 
-        out = tf.math.unsorted_segment_sum(
-            data=node_states_neighbors * attention_scores_norm[:, :, tf.newaxis],
-            segment_ids=edges_for_batch[:, :, 0],
-            num_segments=tf.shape(inputs)[1],
-        )
+        if self.use_bias:
+            output = tf.nn.bias_add(output, self.b)
 
-        out = tf.expand_dims(out, axis=0)
-        return tf.repeat(out, [tf.shape(inputs)[0]], axis=0)
+        if self.activation is not None:
+            output = self.activation(output)
+
+        return output
