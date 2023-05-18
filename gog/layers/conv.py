@@ -3,11 +3,11 @@ import tensorflow as tf
 from tensorflow import keras
 
 
-class GCN(keras.layers.Layer):
+class GraphConvolution(keras.layers.Layer):
 
     def __init__(self, adjacency_matrix: np.ndarray, embedding_size, use_bias=True, activation=None,
-                 weight_initializer="glorot_uniform", bias_initializer="zeros"):
-        super(GCN, self).__init__()
+                 weight_initializer="glorot_uniform", weight_regularizer=None, bias_initializer="zeros"):
+        super(GraphConvolution, self).__init__()
         self.embedding_size = int(embedding_size) if not isinstance(embedding_size, int) else embedding_size
         if embedding_size <= 0:
             raise ValueError(
@@ -17,6 +17,7 @@ class GCN(keras.layers.Layer):
         self.use_bias = use_bias
         self.activation = keras.activations.get(activation)
         self.weight_initializer = keras.initializers.get(weight_initializer)
+        self.weight_regularizer = keras.regularizers.get(weight_regularizer)
         self.bias_initializer = keras.initializers.get(bias_initializer)
 
         # Adjacency matrix with self loops
@@ -31,10 +32,12 @@ class GCN(keras.layers.Layer):
 
     def build(self, input_shape):
         self.W = self.add_weight(
-            shape=(input_shape[-1], self.embedding_size), initializer=self.weight_initializer, trainable=True
+            shape=(input_shape[-1], self.embedding_size), initializer=self.weight_initializer,
+            regularizer=self.weight_regularizer, trainable=True
         )
         if self.use_bias:
-            self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer, trainable=True)
+            self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer,
+                                     regularizer=self.weight_regularizer, trainable=True)
 
     def call(self, inputs, *args, **kwargs):
         A_hat = tf.matmul(tf.matmul(self._D_mod, self._A_tilde), self._D_mod)

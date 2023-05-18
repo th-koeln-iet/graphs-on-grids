@@ -6,7 +6,7 @@ from tensorflow import keras
 class GraphAttention(keras.layers.Layer):
 
     def __init__(self, adjacency_matrix: np.ndarray, embedding_size, use_bias=True, activation=None,
-                 weight_initializer="glorot_uniform", kernel_regularizer=None, bias_initializer="zeros"):
+                 weight_initializer="glorot_uniform", weight_regularizer=None, bias_initializer="zeros"):
         super(GraphAttention, self).__init__()
 
         self.embedding_size = int(embedding_size) if not isinstance(embedding_size, int) else embedding_size
@@ -18,7 +18,7 @@ class GraphAttention(keras.layers.Layer):
         self.use_bias = use_bias
         self.activation = keras.activations.get(activation)
         self.weight_initializer = keras.initializers.get(weight_initializer)
-        self.kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+        self.weight_regularizer = keras.regularizers.get(weight_regularizer)
         self.bias_initializer = keras.initializers.get(bias_initializer)
 
         # Adjacency matrix with self loops
@@ -30,15 +30,15 @@ class GraphAttention(keras.layers.Layer):
     def build(self, input_shape):
         self.W = self.add_weight(
             shape=(input_shape[-1], self.embedding_size), initializer=self.weight_initializer,
-            regularizer=self.kernel_regularizer, trainable=True,
+            regularizer=self.weight_regularizer, trainable=True,
             name="weight_kernel"
         )
         if self.use_bias:
             self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer,
-                                     regularizer=self.kernel_regularizer, trainable=True,
+                                     regularizer=self.weight_regularizer, trainable=True,
                                      name="bias_vector")
         self.W_attn = self.add_weight(shape=(2 * self.embedding_size, 1),
-                                      initializer=self.weight_initializer, regularizer=self.kernel_regularizer,
+                                      initializer=self.weight_initializer, regularizer=self.weight_regularizer,
                                       trainable=True, name="attention_kernel")
 
     def call(self, inputs, *args, **kwargs):
@@ -84,7 +84,7 @@ class GraphAttention(keras.layers.Layer):
 
 class MultiHeadGraphAttention(keras.layers.Layer):
     def __init__(self, adjacency_matrix: np.ndarray, embedding_size, num_heads=3, use_bias=True, activation=None,
-                 weight_initializer="glorot_uniform", kernel_regularizer=None, bias_initializer="zeros",
+                 weight_initializer="glorot_uniform", weight_regularizer=None, bias_initializer="zeros",
                  concat_heads=True):
         super(MultiHeadGraphAttention, self).__init__()
         self.concat_heads = concat_heads
@@ -93,7 +93,7 @@ class MultiHeadGraphAttention(keras.layers.Layer):
         self.attention_layers = [
             GraphAttention(adjacency_matrix=adjacency_matrix, embedding_size=embedding_size, use_bias=use_bias,
                            activation=activation, weight_initializer=weight_initializer,
-                           kernel_regularizer=kernel_regularizer, bias_initializer=bias_initializer)
+                           weight_regularizer=weight_regularizer, bias_initializer=bias_initializer)
             for _ in range(num_heads)]
 
     def call(self, inputs, *args, **kwargs):
