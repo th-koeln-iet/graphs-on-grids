@@ -3,11 +3,11 @@ import tensorflow as tf
 from tensorflow import keras
 
 
-class GAT(keras.layers.Layer):
+class GraphAttention(keras.layers.Layer):
 
     def __init__(self, adjacency_matrix: np.ndarray, embedding_size, use_bias=True, activation=None,
                  weight_initializer="glorot_uniform", kernel_regularizer=None, bias_initializer="zeros"):
-        super(GAT, self).__init__()
+        super(GraphAttention, self).__init__()
 
         self.embedding_size = int(embedding_size) if not isinstance(embedding_size, int) else embedding_size
         if embedding_size <= 0:
@@ -44,6 +44,7 @@ class GAT(keras.layers.Layer):
     def call(self, inputs, *args, **kwargs):
         # Linearly transform node states
         node_states_transformed = tf.matmul(inputs, self.W)
+
         # (1) Compute pair-wise attention scores
         node_states_expanded = tf.gather(node_states_transformed, self.edges, axis=1)
         node_states_expanded = tf.reshape(
@@ -57,18 +58,19 @@ class GAT(keras.layers.Layer):
         # (2) Normalize attention scores
         attention_scores = tf.math.exp(tf.clip_by_value(attention_scores, -2, 2))
         attention_scores_sum = tf.math.unsorted_segment_sum(
-            data=attention_scores[0, :],
+            data=attention_scores[-1, :],
             segment_ids=self.edges[:, 0],
             num_segments=tf.reduce_max(self.edges[:, 0]) + 1,
         )
         attention_scores_sum = tf.repeat(
-            attention_scores_sum, tf.math.bincount(tf.cast(self.edges[:, 0], "int32"))
+            attention_scores_sum, tf.math.bincount(tf.cast(self.edges[:, 0], tf.int32))
         )
         attention_scores_norm = attention_scores / attention_scores_sum
+
         # (3) apply attention scores and aggregate
-        # first attention score can be taken since the attention values are equal for the whole batch
+        # last attention score can be taken since the attention values are equal for the whole batch
         # write normalized attention scores to position where adjacency_matrix equals one
-        weighted_adj = tf.tensor_scatter_nd_update(self._A_tilde, self.edges, attention_scores_norm[0])
+        weighted_adj = tf.tensor_scatter_nd_update(self._A_tilde, self.edges, attention_scores_norm[-1])
         output = tf.matmul(weighted_adj, node_states_transformed)
 
         if self.use_bias:
@@ -78,3 +80,36 @@ class GAT(keras.layers.Layer):
             output = self.activation(output)
 
         return output
+
+
+class MultiHeadGraphAttention(keras.layers.Layer):
+    def __init__(self, adjacency_matrix: np.ndarray, embedding_size, num_heads=3, use_bias=True, activation=None,
+                 weight_initializer="glorot_uniform", kernel_regularizer=None, bias_initializer="zeros",
+                 concat_heads=True):
+        super(MultiHeadGraphAttention, self).__init__()
+        self.concat_heads = concat_heads
+        self.num_heads = num_heads
+        self.activation = keras.activations.get(activation)
+        self.attention_layers = [
+            GraphAttention(adjacency_matrix=adjacency_matrix, embedding_size=embedding_size, use_bias=use_bias,
+                           activation=activation, weight_initializer=weight_initializer,
+                           kernel_regularizer=kernel_regularizer, bias_initializer=bias_initializer)
+            for _ in range(num_heads)]
+
+    def call(self, inputs, *args, **kwargs):
+
+        # Obtain outputs from each attention head
+        outputs = [
+            attention_layer(inputs) for attention_layer in self.attention_layers
+        ]
+
+        # Concatenate or average the node states from each head
+        if self.concat_heads:
+            outputs = tf.concat(outputs, axis=-1)
+        else:
+            outputs = tf.reduce_mean(tf.stack(outputs, axis=-1), axis=-1)
+
+        if self.activation is not None:
+            outputs = self.activation(outputs)
+
+        return tf.nn.relu(outputs)
