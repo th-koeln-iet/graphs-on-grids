@@ -1,21 +1,14 @@
-import pandas as pd
+import pytest
 
-from gog.preprocessing import create_train_test_split, mask_labels
-from gog.structure.graph import StaticGraphDataset, Graph
+from gog.preprocessing import create_train_test_split, mask_labels, create_validation_set
+from test.testUtils import create_graph_dataset, create_test_graph
 
 
 class TestPreprocessing:
     @classmethod
     def setup_method(cls):
-        feature_names = ["A", "B", "Node"]
-        data = [[1, 2, 0], [3, 4, 1], [5, 6, 2], [7, 8, 3], [9, 10, 4]]
-        df = pd.DataFrame(columns=feature_names, data=data)
-        graphs = []
-        for i in range(5):
-            g = Graph(df, feature_names[:2])
-            graphs.append(g)
-        dataset = StaticGraphDataset(edge_list=[[0, 2], [0, 3], [3, 1], [2, 4], [2, 3]], graphs=graphs)
-        cls.dataset = dataset
+        cls.dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4)
+        cls.feature_names = cls.dataset.graph_feature_names
 
     def test_create_train_test_split(self):
         train, test = create_train_test_split(self.dataset)
@@ -25,9 +18,12 @@ class TestPreprocessing:
         assert None not in train
         assert None not in test
 
+        for inst in train:
+            assert inst not in test
+
     def test_mask_labels(self):
         train, test = create_train_test_split(self.dataset)
-        targets = ["A"]
+        targets = ["0"]
         nodes_to_mask = [1, 2]
         train_masked, test_masked = mask_labels(train, test, targets, nodes_to_mask)
 
@@ -46,3 +42,23 @@ class TestPreprocessing:
             masked_nodes = graph.node_features[nodes_to_mask]
             for node in masked_nodes:
                 assert node[0] != 0
+
+    def test_create_validation_set(self):
+        graphs = self.dataset.graphs
+        X_train, X_val, y_train, y_val = create_validation_set(graphs, graphs, validation_size=0.4)
+
+        assert len(X_train) == len(y_train) == 3
+        assert len(X_val) == len(y_val) == 2
+
+        for inst in X_train:
+            assert inst not in X_val
+
+        for inst in y_train:
+            assert inst not in y_val
+
+    def test_create_validation_set_different_size(self):
+        graphs = self.dataset.graphs
+        graphs_larger = graphs.copy()
+        graphs_larger.append(create_test_graph(num_nodes=4, num_features=2))
+        with pytest.raises(ValueError):
+            create_validation_set(graphs, graphs_larger)
