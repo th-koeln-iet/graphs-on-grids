@@ -20,7 +20,7 @@ def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_
 
 def apply_scaler(dataset: StaticGraphDataset, method="zero_mean"):
     train, _, test = dataset.get_splits()
-    train, test = dataset.graphs_to_df(train), dataset.graphs_to_df(test)
+    train, test = dataset.graphs_to_pandas(train), dataset.graphs_to_pandas(test)
     scaler = None
     if method == "zero_mean":
         scaler = StandardScaler()
@@ -48,17 +48,27 @@ def _replace_node_features(num_nodes, graph_list, scaled_split: List[Graph]):
 
 def mask_labels(X_train: List[Graph], X_test: List[Graph], targets: List[str], nodes: List | np.ndarray,
                 method: str = "zeros"):
-    X_train_mask, X_test_mask = [graph.__copy__() for graph in X_train].copy(), [graph.__copy__() for graph in
-                                                                                 X_test].copy()
-    return _mask_split(X_train_mask, targets, nodes, method), _mask_split(X_test_mask, targets, nodes, method)
+    X_train_mask, X_test_mask = [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train].copy() \
+        , [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test].copy()
+    return X_train_mask, X_test_mask
 
 
-def _mask_split(split: List[Graph], targets: List[str], nodes: List, method: str):
-    for instance in split:
-        feature_matrix = instance.node_features
-        feature_indices = [instance.node_feature_names.index(feature_name) for feature_name in targets]
-        for i, row in enumerate(feature_matrix):
-            if i in nodes:
-                if method == "zeros":
-                    row[feature_indices] = 0
-    return split
+def _mask_split(graph: Graph, targets: List[str], nodes: List, method: str):
+    feature_matrix = graph.node_features
+    feature_indices = [graph.node_feature_names.index(feature_name) for feature_name in targets]
+    for i, row in enumerate(feature_matrix):
+        if i in nodes:
+            if method == "zeros":
+                row[feature_indices] = 0
+    return graph
+
+
+def create_validation_set(X: List[Graph], y: List[Graph], validation_size=0.2):
+    if len(X) != len(y):
+        raise ValueError(f"Expected same number of instances in X and y. Received {len(X), len(y)}")
+
+    split_idx = int(len(X) * validation_size)
+    X_train, X_val = X[split_idx:], X[:split_idx]
+    split_idx = int(len(y) * validation_size)
+    y_train, y_val = y[split_idx:], y[:split_idx]
+    return X_train, X_val, y_train, y_val

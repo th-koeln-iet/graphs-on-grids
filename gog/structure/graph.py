@@ -2,14 +2,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-
-
-def _edge_list_to_adj(edge_list) -> np.ndarray:
-    size = len(set([n for e in edge_list for n in e]))
-    adj = np.zeros((size, size), dtype=np.float32)
-    for sink, source in edge_list:
-        adj[sink - 1][source - 1] = 1
-    return adj
+from tqdm import tqdm
 
 
 class Graph:
@@ -38,14 +31,14 @@ class StaticGraphDataset:
         self.val = None
         self.train = None
         self.scaler = None
-        self.adjacency_matrix = _edge_list_to_adj(edge_list)
+        self.adjacency_matrix = self._edge_list_to_adj(edge_list)
         self.graphs = graphs
         self._validate_node_features()
 
     @staticmethod
     def pandas_to_graphs(df: pd.DataFrame, num_nodes: int, features: List[str]):
         graph_list = []
-        for i in range(0, df.shape[0], num_nodes):
+        for i in tqdm(range(0, df.shape[0], num_nodes)):
             df_tmp = df.iloc[i:i + num_nodes].copy()
             graph_list.append(Graph(df_tmp, features))
         return graph_list
@@ -60,9 +53,19 @@ class StaticGraphDataset:
                     raise KeyError("Invalid list of graphs given. Different node features are present")
             self.graph_feature_names = features
 
-    def graphs_to_df(self, graphs: List[Graph]):
+    def _edge_list_to_adj(self, edge_list) -> np.ndarray:
+        size = len(set([n for e in edge_list for n in e]))
+        adj = np.zeros((size, size), dtype=np.float32)
+        for sink, source in edge_list:
+            adj[sink - 1][source - 1] = 1
+        return adj
+
+    def graphs_to_pandas(self, graphs: List[Graph]):
         dataframes = [pd.DataFrame(graph.node_features, columns=self.graph_feature_names) for graph in graphs]
         return pd.concat(dataframes, ignore_index=True)
+
+    def graphs_to_numpy(self, graphs: List[Graph]):
+        return np.array([graph.node_features for graph in graphs])
 
     def set_train_split(self, train: List[Graph]):
         self.train = train
