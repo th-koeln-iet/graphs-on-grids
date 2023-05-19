@@ -1,3 +1,4 @@
+from collections import UserList
 from typing import List
 
 import numpy as np
@@ -24,9 +25,40 @@ class Graph:
         return copy
 
 
+class GraphList(UserList[Graph]):
+    def __init__(self, data=None, num_nodes: int = 0, features: List[str] = None):
+        super().__init__(data)
+        self.features: List[str] = features
+        self.num_nodes: int = num_nodes
+
+    def append(self, item: Graph) -> None:
+        if set(item.node_feature_names) != set(self.features):
+            raise ValueError(f"Node features do not match other graphs. Expected features {self.features}")
+        if self.data and item.node_features.shape != self.data[-1].node_features.shape:
+            raise ValueError(
+                f"Different node feature dimensions provided. Expected {self.data[-1].node_features.shape} but received {item.node_features.shape}")
+        super().append(item)
+
+    def __getitem__(self, item):
+        res = self.data[item]
+        if type(res) == list:
+            return self.__class__(res, self.num_nodes, self.features)
+        else:
+            return res
+
+    def copy(self):
+        return GraphList(data=self.data.copy(), num_nodes=self.num_nodes, features=self.features)
+
+    def to_numpy(self):
+        return np.array([graph.node_features for graph in self])
+
+    def to_pandas(self):
+        return pd.DataFrame(np.vstack(self.to_numpy()), columns=self.features)
+
+
 class StaticGraphDataset:
 
-    def __init__(self, edge_list: List, graphs: List[Graph]):
+    def __init__(self, edge_list, graphs: GraphList):
         self.test = None
         self.val = None
         self.train = None
@@ -37,8 +69,8 @@ class StaticGraphDataset:
 
     @staticmethod
     def pandas_to_graphs(df: pd.DataFrame, num_nodes: int, features: List[str]):
-        graph_list = []
-        for i in tqdm(range(0, df.shape[0], num_nodes)):
+        graph_list = GraphList(num_nodes=num_nodes, features=features)
+        for i in tqdm(range(0, df.shape[0], num_nodes), desc="Creating graph dataset"):
             df_tmp = df.iloc[i:i + num_nodes].copy()
             graph_list.append(Graph(df_tmp, features))
         return graph_list
@@ -60,20 +92,13 @@ class StaticGraphDataset:
             adj[sink - 1][source - 1] = 1
         return adj
 
-    def graphs_to_pandas(self, graphs: List[Graph]):
-        dataframes = [pd.DataFrame(graph.node_features, columns=self.graph_feature_names) for graph in graphs]
-        return pd.concat(dataframes, ignore_index=True)
-
-    def graphs_to_numpy(self, graphs: List[Graph]):
-        return np.array([graph.node_features for graph in graphs])
-
-    def set_train_split(self, train: List[Graph]):
+    def set_train_split(self, train: GraphList):
         self.train = train
 
-    def set_validation_split(self, val: List[Graph]):
+    def set_validation_split(self, val: GraphList):
         self.val = val
 
-    def set_test_split(self, test: List[Graph]):
+    def set_test_split(self, test: GraphList):
         self.test = test
 
     def set_splits(self, train, test, val=None):

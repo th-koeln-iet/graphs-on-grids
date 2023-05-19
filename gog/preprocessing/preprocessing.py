@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from gog.structure.graph import StaticGraphDataset, Graph
+from gog.structure.graph import StaticGraphDataset, Graph, GraphList
 
 
 def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_state=None, shuffle=True):
@@ -20,7 +20,7 @@ def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_
 
 def apply_scaler(dataset: StaticGraphDataset, method="zero_mean"):
     train, _, test = dataset.get_splits()
-    train, test = dataset.graphs_to_pandas(train), dataset.graphs_to_pandas(test)
+    train, test = train.to_pandas(), test.to_pandas()
     scaler = None
     if method == "zero_mean":
         scaler = StandardScaler()
@@ -38,7 +38,7 @@ def apply_scaler(dataset: StaticGraphDataset, method="zero_mean"):
     return dataset.train, dataset.test
 
 
-def _replace_node_features(num_nodes, graph_list, scaled_split: List[Graph]):
+def _replace_node_features(num_nodes, graph_list, scaled_split: GraphList):
     index = 0
     num_nodes = num_nodes
     for graph in graph_list:
@@ -46,10 +46,13 @@ def _replace_node_features(num_nodes, graph_list, scaled_split: List[Graph]):
         index += num_nodes
 
 
-def mask_labels(X_train: List[Graph], X_test: List[Graph], targets: List[str], nodes: List | np.ndarray,
+def mask_labels(X_train: GraphList, X_test: GraphList, targets: List[str], nodes: List | np.ndarray,
                 method: str = "zeros"):
-    X_train_mask, X_test_mask = [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train].copy() \
-        , [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test].copy()
+    X_train_mask, X_test_mask = GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train],
+                                          X_train.num_nodes, X_train.features), \
+        GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test], X_train.num_nodes,
+                  X_train.features)
+
     return X_train_mask, X_test_mask
 
 
@@ -63,7 +66,8 @@ def _mask_split(graph: Graph, targets: List[str], nodes: List, method: str):
     return graph
 
 
-def create_validation_set(X: List[Graph], y: List[Graph], validation_size=0.2):
+def create_validation_set(X: GraphList, y: GraphList, validation_size=0.2) -> Tuple[
+    GraphList, GraphList, GraphList, GraphList]:
     if len(X) != len(y):
         raise ValueError(f"Expected same number of instances in X and y. Received {len(X), len(y)}")
 
