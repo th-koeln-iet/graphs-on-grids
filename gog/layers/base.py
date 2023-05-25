@@ -15,6 +15,7 @@ class GraphBase(keras.layers.Layer):
                  weight_initializer="glorot_uniform",
                  weight_regularizer=None,
                  bias_initializer="zeros"):
+
         super(GraphBase, self).__init__()
         self.embedding_size = int(embedding_size) if not isinstance(embedding_size, int) else embedding_size
         if embedding_size <= 0:
@@ -23,9 +24,16 @@ class GraphBase(keras.layers.Layer):
         if aggregation_method != "sum" and aggregation_method != "mean":
             raise ValueError(
                 f"Received invalid aggregation method={aggregation_method}. Valid options are 'sum' or 'mean'.")
+        if type(hidden_units_node) != list or type(hidden_units_edge) != list:
+            raise ValueError(
+                f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'")
+
         self.hidden_units_node = [embedding_size] if hidden_units_node is None else hidden_units_node
         self.hidden_units_edge = [embedding_size] if hidden_units_edge is None else hidden_units_edge
 
+        if dropout_rate < 0 or dropout_rate > 1:
+            raise ValueError(
+                f"Received invalid value for dropout_rate parameter. Only values between 0 and 1 are valid")
         self.dropout_rate = dropout_rate
         self.adjacency_matrix = adjacency_matrix
         self.use_bias = use_bias
@@ -47,7 +55,9 @@ class GraphBase(keras.layers.Layer):
         self.edges = tf.convert_to_tensor(np.column_stack((rows, cols)), dtype=tf.int32)
 
         self.node_feature_MLP = self.create_node_mlp()
-        if hidden_units_edge:
+
+    def build(self, input_shape):
+        if len(input_shape) == 2:
             self.edge_feature_MLP = self.create_edge_mlp()
 
     def call(self, inputs, *args, **kwargs):

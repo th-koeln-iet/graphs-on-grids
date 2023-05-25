@@ -103,8 +103,7 @@ class StaticGraphDataset:
     def pandas_to_graphs(df_node_features: pd.DataFrame, num_nodes: int, node_feature_names: List[str],
                          df_edge_features: pd.DataFrame = None, num_edges: int = 0,
                          edge_feature_names=None):
-        edge_feature_names = edge_feature_names if not edge_feature_names else list(
-            df_edge_features.columns.values)  # bugged
+        edge_feature_names = edge_feature_names if not edge_feature_names else list(df_edge_features.columns.values)
         graph_list = GraphList(num_nodes=num_nodes, node_feature_names=node_feature_names, num_edges=num_edges,
                                edge_feature_names=edge_feature_names)
         for i in tqdm(range(0, df_node_features.shape[0], num_nodes), desc="Creating graph dataset"):
