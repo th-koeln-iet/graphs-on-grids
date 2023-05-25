@@ -46,30 +46,22 @@ class GraphBase(keras.layers.Layer):
         rows, cols = np.where(self.adjacency_matrix == 1)
         self.edges = tf.convert_to_tensor(np.column_stack((rows, cols)), dtype=tf.int32)
 
-        self.node_feature_MLP = self.create_MLP()
-
-    def build(self, input_shape):
-        self.W = self.add_weight(
-            shape=(input_shape[0][-1] if len(input_shape) == 2 else input_shape[-1], self.embedding_size),
-            initializer=self.weight_initializer,
-            regularizer=self.weight_regularizer, trainable=True
-        )
-        if self.use_bias:
-            self.b = self.add_weight(shape=(self.embedding_size,), initializer=self.bias_initializer,
-                                     regularizer=self.weight_regularizer, trainable=True)
+        self.node_feature_MLP = self.create_node_mlp()
+        if hidden_units_edge:
+            self.edge_feature_MLP = self.create_edge_mlp()
 
     def call(self, inputs, *args, **kwargs):
         # if edge features are present
-        if len(inputs) == 2:
+        if type(inputs) == list:
             node_features, edge_features = inputs
-            # self.adjacency_matrix = transform_adjacency_matrix(self.MLP, self.adjacency_matrix, self.edges,
-            #                                                    node_features, edge_features)
+
             gather = tf.gather(node_features, self.edges, axis=1)
             node_feature_shape = tf.shape(node_features)
-            reshape = tf.reshape(gather, (node_feature_shape[0], tf.shape(self.edges)[0], 2 * node_feature_shape[2]))
+            reshape = tf.reshape(gather,
+                                 (node_feature_shape[0], tf.shape(self.edges)[0], 2 * node_feature_shape[2]))
             node_node_edge_features = tf.concat([reshape, edge_features], axis=2)
 
-            edge_weights = self.node_feature_MLP(node_node_edge_features)
+            edge_weights = self.edge_feature_MLP(node_node_edge_features)
 
             edge_weights = tf.squeeze(edge_weights)
 
@@ -86,34 +78,43 @@ class GraphBase(keras.layers.Layer):
         if self.aggregation_method == "mean":
             masked_feature_matrix = tf.divide(masked_feature_matrix, self._D[:, None])
 
-        output = tf.matmul(masked_feature_matrix, self.W)
-
-        if self.use_bias:
-            output = tf.nn.bias_add(output, self.b)
+        output = self.node_feature_MLP(masked_feature_matrix)
 
         if self.activation is not None:
             output = self.activation(output)
 
         return output
 
-    def create_MLP(self):
+    def create_edge_mlp(self):
         self.edge_mlp_layers = []
-        for n_neurons in self.hidden_units_node:
+        self.edge_mlp_layers = self.create_hidden_layers(self.hidden_units_edge)
+        self.edge_dense_out = keras.layers.Dense(1, activation=keras.activations.sigmoid)
+        self.edge_mlp_layers.append(self.edge_dense_out)
+        return keras.Sequential(self.edge_mlp_layers, name="sequential_edge_features")
+
+    def create_node_mlp(self):
+        self.node_mlp_layers = []
+        self.node_mlp_layers = self.create_hidden_layers(self.hidden_units_node)
+        self.node_dense_out = keras.layers.Dense(self.embedding_size, activation=keras.activations.sigmoid)
+        self.node_mlp_layers.append(self.node_dense_out)
+        return keras.Sequential(self.node_mlp_layers, name="sequential_edge_features")
+
+    def create_hidden_layers(self, hidden_units):
+        mlp_layers = []
+        for n_neurons in hidden_units:
             setattr(self, f"dense_{self.mlp_layer_index}",
                     keras.layers.Dense(n_neurons, use_bias=self.use_bias, kernel_initializer=self.weight_initializer,
                                        bias_initializer=self.bias_initializer,
                                        kernel_regularizer=self.weight_regularizer))
-            self.edge_mlp_layers.append(getattr(self, f"dense_{self.mlp_layer_index}"))
+            mlp_layers.append(getattr(self, f"dense_{self.mlp_layer_index}"))
 
             setattr(self, f"batchNorm_{self.mlp_layer_index}", keras.layers.BatchNormalization())
-            self.edge_mlp_layers.append(getattr(self, f"batchNorm_{self.mlp_layer_index}"))
+            mlp_layers.append(getattr(self, f"batchNorm_{self.mlp_layer_index}"))
 
             setattr(self, f"dropout_{self.mlp_layer_index}", keras.layers.Dropout(self.dropout_rate))
-            self.edge_mlp_layers.append(getattr(self, f"dropout_{self.mlp_layer_index}"))
+            mlp_layers.append(getattr(self, f"dropout_{self.mlp_layer_index}"))
 
             setattr(self, f"relu_{self.mlp_layer_index}", keras.layers.ReLU())
-            self.edge_mlp_layers.append(getattr(self, f"relu_{self.mlp_layer_index}"))
+            mlp_layers.append(getattr(self, f"relu_{self.mlp_layer_index}"))
             self.mlp_layer_index += 1
-        self.edge_dense_out = keras.layers.Dense(1, activation=keras.activations.sigmoid)
-        self.edge_mlp_layers.append(self.edge_dense_out)
-        return keras.Sequential(self.edge_mlp_layers)
+        return mlp_layers
