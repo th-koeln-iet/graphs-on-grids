@@ -5,7 +5,7 @@ from gog.structure.graph import GraphList, Graph, StaticGraphDataset
 
 def create_graph_dataset(num_graphs, num_features, num_nodes) -> StaticGraphDataset:
     feature_names = [str(num) for num in range(num_features)]
-    graphs = GraphList(features=feature_names, num_nodes=num_nodes)
+    graphs = GraphList(node_feature_names=feature_names, num_nodes=num_nodes)
 
     for i in range(num_graphs):
         data = np.random.randint(low=1, high=50, size=(num_nodes, num_features))

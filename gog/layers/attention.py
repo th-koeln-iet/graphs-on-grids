@@ -5,8 +5,13 @@ from tensorflow import keras
 
 class GraphAttention(keras.layers.Layer):
 
-    def __init__(self, adjacency_matrix: np.ndarray, embedding_size, use_bias=True, activation=None,
-                 weight_initializer="glorot_uniform", weight_regularizer=None, bias_initializer="zeros"):
+    def __init__(self, adjacency_matrix: np.ndarray,
+                 embedding_size,
+                 use_bias=True,
+                 activation=None,
+                 weight_initializer="glorot_uniform",
+                 weight_regularizer=None,
+                 bias_initializer="zeros"):
         super(GraphAttention, self).__init__()
 
         self.embedding_size = int(embedding_size) if not isinstance(embedding_size, int) else embedding_size

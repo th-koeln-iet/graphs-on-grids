@@ -3,7 +3,7 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from gog.structure.graph import StaticGraphDataset, Graph, GraphList
+from gog.structure.graph import StaticGraphDataset, GraphList, Graph
 
 
 def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_state=None, shuffle=True):
@@ -42,16 +42,19 @@ def _replace_node_features(num_nodes, graph_list, scaled_split: GraphList):
     index = 0
     num_nodes = num_nodes
     for graph in graph_list:
-        graph.node_features = scaled_split[index:index + num_nodes]
+        graph.node_feature_names = scaled_split[index:index + num_nodes]
         index += num_nodes
 
 
 def mask_labels(X_train: GraphList, X_test: GraphList, targets: List[str], nodes: List | np.ndarray,
                 method: str = "zeros"):
-    X_train_mask, X_test_mask = GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train],
-                                          X_train.num_nodes, X_train.features), \
-        GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test], X_train.num_nodes,
-                  X_train.features)
+    X_train_mask = GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train],
+                             X_train.num_nodes, X_train.node_feature_names, num_edges=X_train.num_edges,
+                             edge_feature_names=X_train.edge_feature_names)
+    X_test_mask = GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test],
+                            num_nodes=X_test.num_nodes,
+                            node_feature_names=X_test.node_feature_names, num_edges=X_test.num_edges,
+                            edge_feature_names=X_test.edge_feature_names)
 
     return X_train_mask, X_test_mask
 

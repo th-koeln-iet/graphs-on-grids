@@ -33,13 +33,13 @@ class TestPreprocessing:
 
         # masked features in selected nodes are actually masked
         for graph in train_masked:
-            masked_nodes = graph.node_features[nodes_to_mask]
+            masked_nodes = graph.node_feature_names[nodes_to_mask]
             for node in masked_nodes:
                 assert node[0] == 0
 
         # original features matrix is unaffected
         for graph in train:
-            masked_nodes = graph.node_features[nodes_to_mask]
+            masked_nodes = graph.node_feature_names[nodes_to_mask]
             for node in masked_nodes:
                 assert node[0] != 0
 
