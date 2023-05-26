@@ -57,11 +57,9 @@ class GraphList(UserList[Graph]):
             raise ValueError(f"Edge features do not match other graphs. Expected features {self.node_feature_names}")
 
         # edge features exist and are of the same shape
-        if self.data and isinstance(item.edge_features, np.ndarray) and isinstance(self.data[
-                                                                                       -1].edge_features,
+        if self.data and isinstance(item.edge_features, np.ndarray) and isinstance(self.data[-1].edge_features,
                                                                                    np.ndarray) and item.edge_features.shape != \
-                self.data[
-                    -1].edge_features.shape:
+                self.data[-1].edge_features.shape:
             raise ValueError(
                 f"Different edge feature dimensions provided. Expected {self.data[-1].edge_features.shape} but received {item.edge_features.shape}")
         super().append(item)
@@ -87,7 +85,7 @@ class GraphList(UserList[Graph]):
         if self.edge_feature_names:
             df_node_features = pd.DataFrame(np.vstack(self.to_numpy()[0]), columns=self.node_feature_names)
             df_edge_features = pd.DataFrame(np.vstack(self.to_numpy()[1]), columns=self.edge_feature_names)
-            return pd.concat([df_node_features, df_edge_features], axis=0, ignore_index=True)
+            return [df_node_features, df_edge_features]
         return pd.DataFrame(np.vstack(self.to_numpy()), columns=self.node_feature_names)
 
 
