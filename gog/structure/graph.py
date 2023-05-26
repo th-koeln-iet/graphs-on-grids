@@ -57,8 +57,11 @@ class GraphList(UserList[Graph]):
             raise ValueError(f"Edge features do not match other graphs. Expected features {self.node_feature_names}")
 
         # edge features exist and are of the same shape
-        if self.data and item.edge_features and self.data[-1].edge_features and item.edge_features.shape != self.data[
-            -1].edge_features.shape:
+        if self.data and isinstance(item.edge_features, np.ndarray) and isinstance(self.data[
+                                                                                       -1].edge_features,
+                                                                                   np.ndarray) and item.edge_features.shape != \
+                self.data[
+                    -1].edge_features.shape:
             raise ValueError(
                 f"Different edge feature dimensions provided. Expected {self.data[-1].edge_features.shape} but received {item.edge_features.shape}")
         super().append(item)
@@ -106,16 +109,17 @@ class StaticGraphDataset:
         edge_feature_names = edge_feature_names if not edge_feature_names else list(df_edge_features.columns.values)
         graph_list = GraphList(num_nodes=num_nodes, node_feature_names=node_feature_names, num_edges=num_edges,
                                edge_feature_names=edge_feature_names)
+        edge_index = 0
         for i in tqdm(range(0, df_node_features.shape[0], num_nodes), desc="Creating graph dataset"):
-            df_tmp = df_node_features.iloc[i:i + num_nodes].copy()
-            graph_list.append(Graph(df_tmp, node_feature_names))
-        if df_edge_features is not None:
-            graph_idx = 0
-            for i in tqdm(range(0, df_edge_features.shape[0], num_edges), desc="Transferring edge features"):
-                df_tmp = df_edge_features.iloc[i:i + num_edges].copy()
-                current_graph = graph_list[graph_idx]
-                current_graph.set_edge_features(df_tmp, edge_feature_names)
-                graph_idx += 1
+            df_tmp_node = df_node_features.iloc[i:i + num_nodes].copy()
+            if df_edge_features is not None:
+                df_tmp_edge = df_edge_features.iloc[edge_index:edge_index + num_edges].copy()
+                edge_index += num_edges
+                graph_list.append(
+                    Graph(node_features=df_tmp_node, node_feature_names=node_feature_names, edge_features=df_tmp_edge,
+                          edge_feature_names=edge_feature_names))
+            else:
+                graph_list.append(Graph(df_tmp_node, node_feature_names))
         return graph_list
 
     def _validate_node_features(self):
