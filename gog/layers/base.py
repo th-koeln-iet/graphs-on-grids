@@ -2,8 +2,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
+from gog.layers.graph_layer import GraphLayer
 
-class GraphBase(keras.layers.Layer):
+
+class GraphBase(GraphLayer):
     def __init__(self, adjacency_matrix: np.ndarray,
                  embedding_size,
                  hidden_units_node=None,
@@ -24,7 +26,8 @@ class GraphBase(keras.layers.Layer):
         if aggregation_method != "sum" and aggregation_method != "mean":
             raise ValueError(
                 f"Received invalid aggregation method={aggregation_method}. Valid options are 'sum' or 'mean'.")
-        if type(hidden_units_node) != list or type(hidden_units_edge) != list:
+        if not isinstance(hidden_units_node, (list, type(None))) or not isinstance(hidden_units_edge,
+                                                                                   (list, type(None))):
             raise ValueError(
                 f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'")
 
@@ -42,7 +45,6 @@ class GraphBase(keras.layers.Layer):
         self.weight_initializer = keras.initializers.get(weight_initializer)
         self.weight_regularizer = keras.regularizers.get(weight_regularizer)
         self.bias_initializer = keras.initializers.get(bias_initializer)
-        self.mlp_layer_index = 0
 
         # Adjacency matrix with self loops
         self._A_tilde = tf.math.add(self.adjacency_matrix, tf.eye(self.adjacency_matrix.shape[0]))
@@ -94,37 +96,3 @@ class GraphBase(keras.layers.Layer):
             output = self.activation(output)
 
         return output
-
-    def create_edge_mlp(self):
-        self.edge_mlp_layers = []
-        self.edge_mlp_layers = self.create_hidden_layers(self.hidden_units_edge)
-        self.edge_dense_out = keras.layers.Dense(1, activation=keras.activations.sigmoid)
-        self.edge_mlp_layers.append(self.edge_dense_out)
-        return keras.Sequential(self.edge_mlp_layers, name="sequential_edge_features")
-
-    def create_node_mlp(self):
-        self.node_mlp_layers = []
-        self.node_mlp_layers = self.create_hidden_layers(self.hidden_units_node)
-        self.node_dense_out = keras.layers.Dense(self.embedding_size, activation=keras.activations.sigmoid)
-        self.node_mlp_layers.append(self.node_dense_out)
-        return keras.Sequential(self.node_mlp_layers, name="sequential_edge_features")
-
-    def create_hidden_layers(self, hidden_units):
-        mlp_layers = []
-        for n_neurons in hidden_units:
-            setattr(self, f"dense_{self.mlp_layer_index}",
-                    keras.layers.Dense(n_neurons, use_bias=self.use_bias, kernel_initializer=self.weight_initializer,
-                                       bias_initializer=self.bias_initializer,
-                                       kernel_regularizer=self.weight_regularizer))
-            mlp_layers.append(getattr(self, f"dense_{self.mlp_layer_index}"))
-
-            setattr(self, f"batchNorm_{self.mlp_layer_index}", keras.layers.BatchNormalization())
-            mlp_layers.append(getattr(self, f"batchNorm_{self.mlp_layer_index}"))
-
-            setattr(self, f"dropout_{self.mlp_layer_index}", keras.layers.Dropout(self.dropout_rate))
-            mlp_layers.append(getattr(self, f"dropout_{self.mlp_layer_index}"))
-
-            setattr(self, f"relu_{self.mlp_layer_index}", keras.layers.ReLU())
-            mlp_layers.append(getattr(self, f"relu_{self.mlp_layer_index}"))
-            self.mlp_layer_index += 1
-        return mlp_layers
