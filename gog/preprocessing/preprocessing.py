@@ -7,6 +7,9 @@ from gog.structure.graph import StaticGraphDataset, GraphList, Graph
 
 
 def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_state=None, shuffle=True):
+    if not isinstance(dataset, StaticGraphDataset):
+        raise ValueError(f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}")
+
     graph_list = dataset.graphs
     num_graphs = len(graph_list)
     if shuffle:
@@ -18,9 +21,16 @@ def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_
     return train, test
 
 
-def apply_scaler(dataset: StaticGraphDataset, method="zero_mean"):
+def apply_scaler(dataset: StaticGraphDataset, method="zero_mean") -> Tuple[GraphList, GraphList]:
+    if not isinstance(dataset, StaticGraphDataset):
+        raise ValueError(f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}")
+
     train, _, test = dataset.get_splits()
     train, test = train.to_pandas(), test.to_pandas()
+
+    if isinstance(train, list) and isinstance(test, list):
+        train, test = train[0], test[0]
+    
     scaler = None
     if method == "zero_mean":
         scaler = StandardScaler()
@@ -48,6 +58,10 @@ def _replace_node_features(num_nodes, graph_list, scaled_split: GraphList):
 
 def mask_labels(X_train: GraphList, X_test: GraphList, targets: List[str], nodes: List | np.ndarray,
                 method: str = "zeros"):
+    if not isinstance(X_train, GraphList) or not isinstance(X_test, GraphList):
+        raise ValueError(
+            f"Expected both inputs for X_train and X_test to be of type {type(GraphList)}. Received types {type(X_train), type(X_test)}")
+
     X_train_mask = GraphList([_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train],
                              X_train.num_nodes, X_train.node_feature_names, num_edges=X_train.num_edges,
                              edge_feature_names=X_train.edge_feature_names)
@@ -71,6 +85,9 @@ def _mask_split(graph: Graph, targets: List[str], nodes: List, method: str):
 
 def create_validation_set(X: GraphList, y: GraphList, validation_size=0.2) -> Tuple[
     GraphList, GraphList, GraphList, GraphList]:
+    if not isinstance(X, GraphList) or not isinstance(y, GraphList):
+        raise ValueError(
+            f"Expected both inputs for X and y to be of type {type(GraphList())}. Received types {type(X), type(y)}")
     if len(X) != len(y):
         raise ValueError(f"Expected same number of instances in X and y. Received {len(X), len(y)}")
 
