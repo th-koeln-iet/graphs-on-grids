@@ -1,6 +1,7 @@
+import numpy as np
 import pytest
 
-from gog.preprocessing import create_train_test_split, mask_labels, create_validation_set
+from gog.preprocessing import create_train_test_split, mask_labels, create_validation_set, apply_scaler
 from test.testUtils import create_graph_dataset, create_test_graph
 
 
@@ -20,6 +21,11 @@ class TestPreprocessing:
 
         for inst in train:
             assert inst not in test
+
+    def test_create_train_test_split_wrong_input_type(self):
+        dataset = None
+        with pytest.raises(ValueError):
+            create_train_test_split(dataset)
 
     def test_mask_labels(self):
         train, test = create_train_test_split(self.dataset)
@@ -43,6 +49,14 @@ class TestPreprocessing:
             for node in masked_nodes:
                 assert node[0] != 0
 
+    def test_mask_labels_wrong_input(self):
+        train, test = [], []
+        targets = ["0"]
+        nodes_to_mask = [1, 2]
+
+        with pytest.raises(ValueError):
+            mask_labels(train, test, targets, nodes_to_mask)
+
     def test_create_validation_set(self):
         graphs = self.dataset.graphs
         X_train, X_val, y_train, y_val = create_validation_set(graphs, graphs, validation_size=0.4)
@@ -62,3 +76,45 @@ class TestPreprocessing:
         graphs_larger.append(create_test_graph(num_nodes=4, num_features=2))
         with pytest.raises(ValueError):
             create_validation_set(graphs, graphs_larger)
+
+    def test_create_validation_set_wrong_input_type(self):
+        X = np.array([])
+        y = np.array([])
+        with pytest.raises(ValueError):
+            create_validation_set(X, y)
+
+    def test_apply_scaler_wrong_input_type(self):
+        dataset = None
+        with pytest.raises(ValueError):
+            apply_scaler(dataset)
+
+    def test_apply_scaler_zero_mean(self):
+        dataset = self.dataset
+        # need to initialize train, test split in dataset object to correctly apply scaling
+        train, test = create_train_test_split(dataset)
+        train_scaled, test_scaled = apply_scaler(dataset)
+
+        assert len(train) == len(train_scaled)
+        assert len(test) == len(test_scaled)
+
+        from sklearn.preprocessing import StandardScaler
+        assert isinstance(dataset.scaler, StandardScaler)
+
+    def test_apply_scaler_min_max(self):
+        dataset = self.dataset
+        # need to initialize train, test split in dataset object to correctly apply scaling
+        train, test = create_train_test_split(dataset)
+        train_scaled, test_scaled = apply_scaler(dataset, method="min_max")
+
+        assert len(train) == len(train_scaled)
+        assert len(test) == len(test_scaled)
+
+        from sklearn.preprocessing import MinMaxScaler
+        assert isinstance(dataset.scaler, MinMaxScaler)
+
+    def test_apply_scaler_wrong_method(self):
+        dataset = self.dataset
+        # need to initialize train, test split in dataset object to correctly apply scaling
+        create_train_test_split(dataset)
+        with pytest.raises(ValueError):
+            apply_scaler(dataset, method="magic")

@@ -71,6 +71,9 @@ class GraphList(UserList[Graph]):
         else:
             return res
 
+    def type(self):
+        return self.__class__.__name__
+
     def copy(self):
         return GraphList(data=self.data.copy(), num_nodes=self.num_nodes, node_feature_names=self.node_feature_names,
                          num_edges=self.num_edges, edge_feature_names=self.edge_feature_names)
@@ -153,3 +156,7 @@ class StaticGraphDataset:
 
     def get_splits(self):
         return self.train, self.val, self.test
+
+    @classmethod
+    def type(cls):
+        return cls.__name__
