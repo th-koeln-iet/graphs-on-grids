@@ -28,8 +28,8 @@ class GraphConvolution(GraphLayer):
             raise ValueError(
                 f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'")
 
-        self.hidden_units_node = [embedding_size] if hidden_units_node is None else hidden_units_node
-        self.hidden_units_edge = [embedding_size] if hidden_units_edge is None else hidden_units_edge
+        self.hidden_units_node = [] if hidden_units_node is None else hidden_units_node
+        self.hidden_units_edge = [] if hidden_units_edge is None else hidden_units_edge
 
         if dropout_rate < 0 or dropout_rate > 1:
             raise ValueError(

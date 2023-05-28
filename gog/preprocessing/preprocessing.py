@@ -21,16 +21,28 @@ def create_train_test_split(dataset: StaticGraphDataset, train_size=0.8, random_
     return train, test
 
 
-def apply_scaler(dataset: StaticGraphDataset, method="zero_mean") -> Tuple[GraphList, GraphList]:
+def apply_scaler(dataset: StaticGraphDataset, method="zero_mean", target="node") -> Tuple[GraphList, GraphList]:
     if not isinstance(dataset, StaticGraphDataset):
         raise ValueError(f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}")
+
+    if not dataset.train or not dataset.test:
+        raise ValueError(
+            f"The dataset has not yet been split into a training or test set. Did you already call 'create_train_test_split' on this dataset?")
 
     train, _, test = dataset.get_splits()
     train, test = train.to_pandas(), test.to_pandas()
 
     if isinstance(train, list) and isinstance(test, list):
-        train, test = train[0], test[0]
-    
+        if target == "node":
+            train, test = train[0], test[0]
+        elif target == "edge":
+            train, test = train[1], test[1]
+        else:
+            raise ValueError(f"Expected target to be either 'node' or 'edge'. Received {target}")
+    else:
+        if target == "edge":
+            raise ValueError(f"Expected dataset to contain edge features with for target 'edge'")
+
     scaler = None
     if method == "zero_mean":
         scaler = StandardScaler()
@@ -41,19 +53,33 @@ def apply_scaler(dataset: StaticGraphDataset, method="zero_mean") -> Tuple[Graph
 
     train = scaler.fit_transform(train)
     test = scaler.transform(test)
-    dataset.scaler = scaler
-    num_nodes = dataset.adjacency_matrix.shape[0]
-    _replace_node_features(num_nodes, dataset.train, train)
-    _replace_node_features(num_nodes, dataset.test, test)
+
+    if target == "node":
+        num_nodes = dataset.adjacency_matrix.shape[0]
+        dataset.node_scaler = scaler
+        _replace_node_features(num_nodes, dataset.train, train)
+        _replace_node_features(num_nodes, dataset.test, test)
+    elif target == "edge":
+        num_edges = np.count_nonzero(dataset.adjacency_matrix == 1)
+        dataset.edge_scaler = scaler
+        _replace_edge_features(num_edges, dataset.train, train)
+        _replace_edge_features(num_edges, dataset.test, test)
+
     return dataset.train, dataset.test
 
 
 def _replace_node_features(num_nodes, graph_list, scaled_split: GraphList):
     index = 0
-    num_nodes = num_nodes
     for graph in graph_list:
-        graph.node_feature_names = scaled_split[index:index + num_nodes]
+        graph.node_features = scaled_split[index:index + num_nodes]
         index += num_nodes
+
+
+def _replace_edge_features(num_edges, graph_list, scaled_split: GraphList):
+    index = 0
+    for graph in graph_list:
+        graph.edge_features = scaled_split[index:index + num_edges]
+        index += num_edges
 
 
 def mask_labels(X_train: GraphList, X_test: GraphList, targets: List[str], nodes: List | np.ndarray,
