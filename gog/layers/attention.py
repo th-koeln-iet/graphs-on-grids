@@ -27,7 +27,7 @@ class GraphAttention(GraphLayer):
             raise ValueError(
                 f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'")
 
-        self.hidden_units_node = [embedding_size] if hidden_units_node is None else hidden_units_node
+        self.hidden_units_node = [] if hidden_units_node is None else hidden_units_node
 
         if dropout_rate < 0 or dropout_rate > 1:
             raise ValueError(
@@ -155,17 +155,26 @@ class GraphAttention(GraphLayer):
 
 
 class MultiHeadGraphAttention(keras.layers.Layer):
-    def __init__(self, adjacency_matrix: np.ndarray, embedding_size, num_heads=3, use_bias=True, activation=None,
+    def __init__(self, adjacency_matrix: np.ndarray, embedding_size, hidden_units_node=None, dropout_rate=0,
+                 num_heads=3, use_bias=True,
+                 activation=None,
                  weight_initializer="glorot_uniform", weight_regularizer=None, bias_initializer="zeros",
                  concat_heads=True):
         super(MultiHeadGraphAttention, self).__init__()
+        self.hidden_units_node = hidden_units_node
         self.concat_heads = concat_heads
         self.num_heads = num_heads
         self.activation = keras.activations.get(activation)
         self.attention_layers = [
-            GraphAttention(adjacency_matrix=adjacency_matrix, embedding_size=embedding_size, use_bias=use_bias,
-                           activation=activation, weight_initializer=weight_initializer,
-                           weight_regularizer=weight_regularizer, bias_initializer=bias_initializer)
+            GraphAttention(adjacency_matrix=adjacency_matrix,
+                           hidden_units_node=None,
+                           embedding_size=embedding_size,
+                           dropout_rate=0,
+                           use_bias=use_bias,
+                           activation=activation,
+                           weight_initializer=weight_initializer,
+                           weight_regularizer=weight_regularizer,
+                           bias_initializer=bias_initializer)
             for _ in range(num_heads)]
 
     def call(self, inputs, *args, **kwargs):

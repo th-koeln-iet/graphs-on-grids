@@ -98,7 +98,8 @@ class StaticGraphDataset:
         self.test = None
         self.val = None
         self.train = None
-        self.scaler = None
+        self.node_scaler = None
+        self.edge_scaler = None
         self.adjacency_matrix = self._edge_list_to_adj(edge_list)
         self.graphs = graphs
         self._validate_node_features()

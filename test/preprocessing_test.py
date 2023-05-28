@@ -98,7 +98,7 @@ class TestPreprocessing:
         assert len(test) == len(test_scaled)
 
         from sklearn.preprocessing import StandardScaler
-        assert isinstance(dataset.scaler, StandardScaler)
+        assert isinstance(dataset.node_scaler, StandardScaler)
 
     def test_apply_scaler_min_max(self):
         dataset = self.dataset
@@ -110,7 +110,31 @@ class TestPreprocessing:
         assert len(test) == len(test_scaled)
 
         from sklearn.preprocessing import MinMaxScaler
-        assert isinstance(dataset.scaler, MinMaxScaler)
+        assert isinstance(dataset.node_scaler, MinMaxScaler)
+
+    def test_apply_scaler_edge_zero_mean(self):
+        dataset = self.dataset
+        # need to initialize train, test split in dataset object to correctly apply scaling
+        train, test = create_train_test_split(dataset)
+        train_scaled, test_scaled = apply_scaler(dataset, target="edge")
+
+        assert len(train) == len(train_scaled)
+        assert len(test) == len(test_scaled)
+
+        from sklearn.preprocessing import StandardScaler
+        assert isinstance(dataset.edge_scaler, StandardScaler)
+
+    def test_apply_scaler_edge_min_max(self):
+        dataset = self.dataset
+        # need to initialize train, test split in dataset object to correctly apply scaling
+        train, test = create_train_test_split(dataset)
+        train_scaled, test_scaled = apply_scaler(dataset, method="min_max", target="edge")
+
+        assert len(train) == len(train_scaled)
+        assert len(test) == len(test_scaled)
+
+        from sklearn.preprocessing import MinMaxScaler
+        assert isinstance(dataset.edge_scaler, MinMaxScaler)
 
     def test_apply_scaler_wrong_method(self):
         dataset = self.dataset
@@ -118,3 +142,17 @@ class TestPreprocessing:
         create_train_test_split(dataset)
         with pytest.raises(ValueError):
             apply_scaler(dataset, method="magic")
+
+    def test_apply_scaler_wrong_target(self):
+        dataset = self.dataset
+        # need to initialize train, test split in dataset object to correctly apply scaling
+        create_train_test_split(dataset)
+        with pytest.raises(ValueError):
+            apply_scaler(dataset, target="magic")
+
+    def test_apply_scaler_edge_scaling_without_edge_features(self):
+        dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4, create_edge_features=False)
+        create_train_test_split(dataset)
+        with pytest.raises(ValueError) as err:
+            apply_scaler(dataset, target="edge")
+        assert "contain edge features" in str(err.value)
