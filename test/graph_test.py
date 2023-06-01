@@ -4,7 +4,6 @@ from test.testUtils import create_graph_dataset, create_test_graph
 
 
 class TestGraphs:
-
     @classmethod
     def setup_method(cls):
         cls.dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4)

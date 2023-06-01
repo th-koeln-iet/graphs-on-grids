@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 
-from gog.preprocessing import create_train_test_split, mask_labels, create_validation_set, apply_scaler
+from gog.preprocessing import (
+    create_train_test_split,
+    mask_labels,
+    create_validation_set,
+    apply_scaler,
+)
 from test.testUtils import create_graph_dataset, create_test_graph
 
 
@@ -59,7 +64,9 @@ class TestPreprocessing:
 
     def test_create_validation_set(self):
         graphs = self.dataset.graphs
-        X_train, X_val, y_train, y_val = create_validation_set(graphs, graphs, validation_size=0.4)
+        X_train, X_val, y_train, y_val = create_validation_set(
+            graphs, graphs, validation_size=0.4
+        )
 
         assert len(X_train) == len(y_train) == 3
         assert len(X_val) == len(y_val) == 2
@@ -98,6 +105,7 @@ class TestPreprocessing:
         assert len(test) == len(test_scaled)
 
         from sklearn.preprocessing import StandardScaler
+
         assert isinstance(dataset.node_scaler, StandardScaler)
 
     def test_apply_scaler_min_max(self):
@@ -110,6 +118,7 @@ class TestPreprocessing:
         assert len(test) == len(test_scaled)
 
         from sklearn.preprocessing import MinMaxScaler
+
         assert isinstance(dataset.node_scaler, MinMaxScaler)
 
     def test_apply_scaler_edge_zero_mean(self):
@@ -122,18 +131,22 @@ class TestPreprocessing:
         assert len(test) == len(test_scaled)
 
         from sklearn.preprocessing import StandardScaler
+
         assert isinstance(dataset.edge_scaler, StandardScaler)
 
     def test_apply_scaler_edge_min_max(self):
         dataset = self.dataset
         # need to initialize train, test split in dataset object to correctly apply scaling
         train, test = create_train_test_split(dataset)
-        train_scaled, test_scaled = apply_scaler(dataset, method="min_max", target="edge")
+        train_scaled, test_scaled = apply_scaler(
+            dataset, method="min_max", target="edge"
+        )
 
         assert len(train) == len(train_scaled)
         assert len(test) == len(test_scaled)
 
         from sklearn.preprocessing import MinMaxScaler
+
         assert isinstance(dataset.edge_scaler, MinMaxScaler)
 
     def test_apply_scaler_wrong_method(self):
@@ -151,7 +164,9 @@ class TestPreprocessing:
             apply_scaler(dataset, target="magic")
 
     def test_apply_scaler_edge_scaling_without_edge_features(self):
-        dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4, create_edge_features=False)
+        dataset = create_graph_dataset(
+            num_graphs=5, num_features=2, num_nodes=4, create_edge_features=False
+        )
         create_train_test_split(dataset)
         with pytest.raises(ValueError) as err:
             apply_scaler(dataset, target="edge")
