@@ -26,17 +26,27 @@ def data_to_parquet(filecount):
         if i % 500 == 0:
             print(f"Handled {i} files")
             if os.path.isfile(output_path):
-                pd.concat(dataframes).to_parquet(output_path, engine="fastparquet", index=False, compression="gzip",
-                                                 append=True)
+                pd.concat(dataframes).to_parquet(
+                    output_path,
+                    engine="fastparquet",
+                    index=False,
+                    compression="gzip",
+                    append=True,
+                )
             else:
-                pd.concat(dataframes).to_parquet(output_path, engine="fastparquet", index=False, compression="gzip")
+                pd.concat(dataframes).to_parquet(
+                    output_path, engine="fastparquet", index=False, compression="gzip"
+                )
             dataframes = []
 
 
 def get_edges():
-    adm_data = pd.read_csv("AdmittanceMatrix_50Hz.csv",
-                           delimiter=";",
-                           header=None).iloc[1:, 1:-1].astype(complex).reset_index(drop=True)
+    adm_data = (
+        pd.read_csv("AdmittanceMatrix_50Hz.csv", delimiter=";", header=None)
+        .iloc[1:, 1:-1]
+        .astype(complex)
+        .reset_index(drop=True)
+    )
     adm_data.columns = range(adm_data.columns.size)
 
     # Umwandlung der Admittanz-Matrix in eine Bool'sche Adjazenzmatrix
@@ -51,8 +61,13 @@ def get_edges():
     return edges
 
 
-def create_train_val_test_split(dataset: StaticGraphDataset, train_size=0.65, validation_size=0.15, random_state=None,
-                                shuffle=True):
+def create_train_val_test_split(
+    dataset: StaticGraphDataset,
+    train_size=0.65,
+    validation_size=0.15,
+    random_state=None,
+    shuffle=True,
+):
     graph_list = dataset.graphs
     num_graphs = len(graph_list)
     if shuffle:
@@ -60,8 +75,10 @@ def create_train_val_test_split(dataset: StaticGraphDataset, train_size=0.65, va
         np.random.shuffle(graph_list)
     last_train_index = int(num_graphs * train_size)
     last_val_index = int(last_train_index + num_graphs * validation_size)
-    train, val, test = graph_list[0:last_train_index], \
-        graph_list[last_train_index + 1: last_val_index], \
-        graph_list[last_train_index:num_graphs + 1]
+    train, val, test = (
+        graph_list[0:last_train_index],
+        graph_list[last_train_index + 1 : last_val_index],
+        graph_list[last_train_index : num_graphs + 1],
+    )
     dataset.set_splits(train=train, val=val, test=test)
     return train, val, test
