@@ -8,12 +8,12 @@ from tqdm import tqdm
 
 class Graph:
     def __init__(
-            self,
-            ID,
-            node_features,
-            node_feature_names,
-            edge_features=None,
-            edge_feature_names=None,
+        self,
+        ID,
+        node_features,
+        node_feature_names,
+        edge_features=None,
+        edge_feature_names=None,
     ):
         self.ID = ID
         self.edge_features = None
@@ -28,14 +28,14 @@ class Graph:
 
     @staticmethod
     def _set_node_features(
-            node_features: pd.DataFrame | np.ndarray, node_feature_names: List[str]
+        node_features: pd.DataFrame | np.ndarray, node_feature_names: List[str]
     ) -> np.ndarray:
         if type(node_features) == np.ndarray:
             return node_features
         return node_features[node_feature_names].to_numpy()
 
     def set_edge_features(
-            self, edge_features: pd.DataFrame | np.ndarray, edge_feature_names: List[str]
+        self, edge_features: pd.DataFrame | np.ndarray, edge_feature_names: List[str]
     ):
         self.edge_feature_names = edge_feature_names
         if type(edge_features) == np.ndarray:
@@ -64,13 +64,13 @@ class Graph:
 
 class GraphList(UserList):
     def __init__(
-            self,
-            data=None,
-            num_nodes: int = 0,
-            node_feature_names: List[str] = None,
-            num_edges: int = 0,
-            edge_feature_names: List[str] = None,
-            strict_checks=True,
+        self,
+        data=None,
+        num_nodes: int = 0,
+        node_feature_names: List[str] = None,
+        num_edges: int = 0,
+        edge_feature_names: List[str] = None,
+        strict_checks=True,
     ):
         super().__init__(data)
         self.node_feature_names: List[str] = node_feature_names
@@ -86,16 +86,16 @@ class GraphList(UserList):
                     f"Node features do not match other graphs. Expected features {self.node_feature_names}"
                 )
             if (
-                    self.data
-                    and item.node_features.shape != self.data[-1].node_features.shape
+                self.data
+                and item.node_features.shape != self.data[-1].node_features.shape
             ):
                 raise ValueError(
                     f"Different node feature dimensions provided. Expected {self.data[-1].node_features.shape} but received {item.node_features.shape}"
                 )
             if (
-                    item.edge_feature_names
-                    and self.edge_feature_names
-                    and set(item.edge_feature_names) != set(self.edge_feature_names)
+                item.edge_feature_names
+                and self.edge_feature_names
+                and set(item.edge_feature_names) != set(self.edge_feature_names)
             ):
                 raise ValueError(
                     f"Edge features do not match other graphs. Expected features {self.node_feature_names}"
@@ -103,10 +103,10 @@ class GraphList(UserList):
 
             # edge features exist and are of the same shape
             if (
-                    self.data
-                    and isinstance(item.edge_features, np.ndarray)
-                    and isinstance(self.data[-1].edge_features, np.ndarray)
-                    and item.edge_features.shape != self.data[-1].edge_features.shape
+                self.data
+                and isinstance(item.edge_features, np.ndarray)
+                and isinstance(self.data[-1].edge_features, np.ndarray)
+                and item.edge_features.shape != self.data[-1].edge_features.shape
             ):
                 raise ValueError(
                     f"Different edge feature dimensions provided. Expected {self.data[-1].edge_features.shape} but received {item.edge_features.shape}"
@@ -187,12 +187,12 @@ class StaticGraphDataset:
 
     @staticmethod
     def pandas_to_graphs(
-            df_node_features: pd.DataFrame,
-            num_nodes: int,
-            node_feature_names: List[str],
-            df_edge_features: pd.DataFrame = None,
-            num_edges: int = 0,
-            edge_feature_names=None,
+        df_node_features: pd.DataFrame,
+        num_nodes: int,
+        node_feature_names: List[str],
+        df_edge_features: pd.DataFrame = None,
+        num_edges: int = 0,
+        edge_feature_names=None,
     ):
         edge_feature_names = (
             edge_feature_names
@@ -208,14 +208,14 @@ class StaticGraphDataset:
         edge_index = 0
         graph_id = 0
         for i in tqdm(
-                range(0, df_node_features.shape[0], num_nodes),
-                desc="Creating graph dataset",
+            range(0, df_node_features.shape[0], num_nodes),
+            desc="Creating graph dataset",
         ):
-            df_tmp_node_features = df_node_features.iloc[i: i + num_nodes].copy()
+            df_tmp_node_features = df_node_features.iloc[i : i + num_nodes].copy()
             if df_edge_features is not None:
                 df_tmp_edge_features = df_edge_features.iloc[
-                                       edge_index: edge_index + num_edges
-                                       ].copy()
+                    edge_index : edge_index + num_edges
+                ].copy()
                 edge_index += num_edges
                 graph_list.append(
                     Graph(
@@ -244,8 +244,8 @@ class StaticGraphDataset:
             feature_shape = first_graph.node_features.shape
             for graph in self.graphs:
                 if (
-                        features != graph.node_feature_names
-                        or feature_shape != graph.node_features.shape
+                    features != graph.node_feature_names
+                    or feature_shape != graph.node_features.shape
                 ):
                     raise KeyError(
                         "Invalid list of graphs given. Different node features are present"

@@ -11,6 +11,7 @@ class GraphAttention(GraphLayer):
         adjacency_matrix: np.ndarray,
         embedding_size,
         hidden_units_node=None,
+        hidden_units_attention=None,
         dropout_rate=0,
         use_bias=True,
         activation=None,
@@ -18,62 +19,26 @@ class GraphAttention(GraphLayer):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
-        super(GraphAttention, self).__init__()
-
-        self.embedding_size = (
-            int(embedding_size)
-            if not isinstance(embedding_size, int)
-            else embedding_size
+        super(GraphAttention, self).__init__(
+            adjacency_matrix=adjacency_matrix,
+            embedding_size=embedding_size,
+            hidden_units_node=hidden_units_node,
+            hidden_units_edge=hidden_units_attention,
+            dropout_rate=dropout_rate,
+            use_bias=use_bias,
+            activation=activation,
+            weight_initializer=weight_initializer,
+            weight_regularizer=weight_regularizer,
+            bias_initializer=bias_initializer,
         )
-        if embedding_size <= 0:
-            raise ValueError(
-                f"Received invalid embedding_size, expected positive integer. Received embedding_size={embedding_size}"
-            )
 
-        if not isinstance(hidden_units_node, (list, type(None))):
-            raise ValueError(
-                f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'"
-            )
-
-        self.hidden_units_node = [] if hidden_units_node is None else hidden_units_node
-
-        if dropout_rate < 0 or dropout_rate > 1:
-            raise ValueError(
-                f"Received invalid value for dropout_rate parameter. Only values between 0 and 1 are valid"
-            )
-
-        self.dropout_rate = dropout_rate
-        self.adjacency_matrix = adjacency_matrix
-        self.use_bias = use_bias
-        self.activation = keras.activations.get(activation)
-        self.weight_initializer = keras.initializers.get(weight_initializer)
-        self.weight_regularizer = keras.regularizers.get(weight_regularizer)
-        self.bias_initializer = keras.initializers.get(bias_initializer)
-
-        # Adjacency matrix with self loops
-        self._A_tilde = tf.math.add(
-            self.adjacency_matrix, tf.eye(self.adjacency_matrix.shape[0])
-        )
         self.edge_feature_indices = self.calculate_edge_feature_indices()
 
         rows, cols = np.where(self._A_tilde == 1)
         self.edges = tf.convert_to_tensor(np.column_stack((rows, cols)), dtype=tf.int32)
 
-        self.node_feature_MLP = self.create_node_mlp()
-
     def build(self, input_shape):
-        self.W_attn = self.add_weight(
-            shape=(
-                2 * self.embedding_size
-                if not isinstance(input_shape, list)
-                else 2 * self.embedding_size + input_shape[1][-1],
-                1,
-            ),
-            initializer=self.weight_initializer,
-            regularizer=self.weight_regularizer,
-            trainable=True,
-            name="attention_kernel",
-        )
+        self.attention_mlp = self.create_attention_mlp()
 
     def call(self, inputs, *args, **kwargs):
         # if edge features are present
@@ -102,9 +67,7 @@ class GraphAttention(GraphLayer):
                 edge_features, node_features, node_states_expanded
             )
 
-        attention_scores = tf.nn.leaky_relu(
-            tf.matmul(node_states_expanded, self.W_attn)
-        )
+        attention_scores = self.attention_mlp(node_states_expanded)
         attention_scores = tf.squeeze(attention_scores, -1)
 
         # Normalize attention scores
@@ -194,6 +157,19 @@ class GraphAttention(GraphLayer):
                 edge_index += 1
         return tf.convert_to_tensor(idx_list, dtype=tf.int32)
 
+    def create_attention_mlp(self):
+        self.attention_mlp_layers = []
+        self.attention_mlp_layers = self.create_hidden_layers(
+            self.hidden_units_edge, False
+        )
+        self.attention_dense_out = keras.layers.Dense(
+            1, activation=keras.layers.LeakyReLU(0.2)
+        )
+        self.attention_mlp_layers.append(self.attention_dense_out)
+        return keras.Sequential(
+            self.attention_mlp_layers, name="sequential_attention_scores"
+        )
+
 
 class MultiHeadGraphAttention(keras.layers.Layer):
     def __init__(
@@ -220,7 +196,7 @@ class MultiHeadGraphAttention(keras.layers.Layer):
                 adjacency_matrix=adjacency_matrix,
                 hidden_units_node=None,
                 embedding_size=embedding_size,
-                dropout_rate=0,
+                dropout_rate=dropout_rate,
                 use_bias=use_bias,
                 activation=activation,
                 weight_initializer=weight_initializer,
