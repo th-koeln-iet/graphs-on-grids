@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 from gog.layers.graph_layer import GraphLayer
 
@@ -20,56 +19,27 @@ class GraphBase(GraphLayer):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
-        super(GraphBase, self).__init__()
-        self.embedding_size = (
-            int(embedding_size)
-            if not isinstance(embedding_size, int)
-            else embedding_size
+        super(GraphBase, self).__init__(
+            adjacency_matrix=adjacency_matrix,
+            embedding_size=embedding_size,
+            hidden_units_node=hidden_units_node,
+            hidden_units_edge=hidden_units_edge,
+            dropout_rate=dropout_rate,
+            use_bias=use_bias,
+            activation=activation,
+            weight_initializer=weight_initializer,
+            weight_regularizer=weight_regularizer,
+            bias_initializer=bias_initializer,
         )
-        if embedding_size <= 0:
-            raise ValueError(
-                f"Received invalid embedding_size, expected positive integer. Received embedding_size={embedding_size}"
-            )
         if aggregation_method != "sum" and aggregation_method != "mean":
             raise ValueError(
                 f"Received invalid aggregation method={aggregation_method}. Valid options are 'sum' or 'mean'."
             )
-        if not isinstance(hidden_units_node, (list, type(None))) or not isinstance(
-            hidden_units_edge, (list, type(None))
-        ):
-            raise ValueError(
-                f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'"
-            )
 
-        self.hidden_units_node = [] if hidden_units_node is None else hidden_units_node
-        self.hidden_units_edge = [] if hidden_units_edge is None else hidden_units_edge
-
-        if dropout_rate < 0 or dropout_rate > 1:
-            raise ValueError(
-                f"Received invalid value for dropout_rate parameter. Only values between 0 and 1 are valid"
-            )
-        self.dropout_rate = dropout_rate
-        self.adjacency_matrix = adjacency_matrix
-        self.use_bias = use_bias
-        self.activation = keras.activations.get(activation)
         self.aggregation_method = aggregation_method
-        self.weight_initializer = keras.initializers.get(weight_initializer)
-        self.weight_regularizer = keras.regularizers.get(weight_regularizer)
-        self.bias_initializer = keras.initializers.get(bias_initializer)
-
-        # Adjacency matrix with self loops
-        self._A_tilde = tf.math.add(
-            self.adjacency_matrix, tf.eye(self.adjacency_matrix.shape[0])
-        )
 
         # Degree vector of adjacency matrix
         self._D = tf.reduce_sum(self._A_tilde, axis=1)
-
-        # Edge list
-        rows, cols = np.where(self.adjacency_matrix == 1)
-        self.edges = tf.convert_to_tensor(np.column_stack((rows, cols)), dtype=tf.int32)
-
-        self.node_feature_MLP = self.create_node_mlp()
 
     def build(self, input_shape):
         if len(input_shape) == 2:
