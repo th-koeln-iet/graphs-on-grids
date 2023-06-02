@@ -1,3 +1,4 @@
+import logging
 from typing import List, Tuple
 
 import numpy as np
@@ -26,6 +27,65 @@ def create_train_test_split(
     )
     dataset.set_splits(train=train, test=test)
     return train, test
+
+
+def create_windowed_train_test_split(
+    dataset: StaticGraphDataset,
+    window_size,
+    len_labels,
+    step,
+    start=0,
+    train_size=0.8,
+    random_state=None,
+    shuffle=False,
+):
+    if not isinstance(dataset, StaticGraphDataset):
+        raise ValueError(
+            f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}"
+        )
+    graphs = dataset.graphs
+    windows = GraphList(
+        num_nodes=graphs.num_nodes,
+        node_feature_names=graphs.node_feature_names,
+        num_edges=graphs.num_edges,
+        edge_feature_names=graphs.edge_feature_names,
+        strict_checks=False,
+    )
+    labels = GraphList(
+        num_nodes=graphs.num_nodes,
+        node_feature_names=graphs.node_feature_names,
+        num_edges=graphs.num_edges,
+        edge_feature_names=graphs.edge_feature_names,
+        strict_checks=False,
+    )
+    num_graphs = len(graphs)
+    while start + len_labels < num_graphs - 1:
+        end = start + window_size
+        current_window = graphs[start:end]
+        label_window = graphs[end + 1 : end + 1 + len_labels]
+        if len(current_window) == window_size:
+            labels.append(label_window)
+            windows.append(current_window)
+        start = start + step
+    if num_graphs != len(windows):
+        logging.warning(
+            f"Dataset of size {num_graphs}, cannot be cleanly divided with window size {window_size}. Discarded {num_graphs - len(windows)} graph instances."
+        )
+    dataset.graphs = windows
+    if shuffle:
+        np.random.seed(random_state)
+        np.random.shuffle(windows)
+        np.random.shuffle(labels)
+
+    num_instances = len(windows)
+    last_train_index = int(num_instances * train_size)
+    X_train, X_test, y_train, y_test = (
+        windows[0:last_train_index],
+        windows[last_train_index : num_instances + 1],
+        labels[0:last_train_index],
+        labels[last_train_index : num_instances + 1],
+    )
+    return X_train, X_test, y_train, y_test
 
 
 def apply_scaler(
@@ -118,6 +178,7 @@ def mask_labels(
         X_train.node_feature_names,
         num_edges=X_train.num_edges,
         edge_feature_names=X_train.edge_feature_names,
+        strict_checks=X_train.strict_checks,
     )
     X_test_mask = GraphList(
         [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test],
@@ -125,12 +186,15 @@ def mask_labels(
         node_feature_names=X_test.node_feature_names,
         num_edges=X_test.num_edges,
         edge_feature_names=X_test.edge_feature_names,
+        strict_checks=X_test.strict_checks,
     )
 
     return X_train_mask, X_test_mask
 
 
-def _mask_split(graph: Graph, targets: List[str], nodes: List, method: str):
+def _mask_split(graph: Graph | GraphList, targets: List[str], nodes: List, method: str):
+    if isinstance(graph, GraphList):
+        return _mask_split_dynamic(graph, targets, nodes, method)
     feature_matrix = graph.node_features
     feature_indices = [
         graph.node_feature_names.index(feature_name) for feature_name in targets
@@ -140,6 +204,23 @@ def _mask_split(graph: Graph, targets: List[str], nodes: List, method: str):
             if method == "zeros":
                 row[feature_indices] = 0
     return graph
+
+
+def _mask_split_dynamic(
+    graph_sequence: GraphList, targets: List[str], nodes: List, method: str
+):
+    lst = GraphList(
+        data=[
+            _mask_split(graph, targets, nodes, method).__copy__()
+            for graph in graph_sequence
+        ],
+        num_nodes=graph_sequence.num_nodes,
+        node_feature_names=graph_sequence.node_feature_names,
+        num_edges=graph_sequence.num_edges,
+        edge_feature_names=graph_sequence.edge_feature_names,
+        strict_checks=graph_sequence.strict_checks,
+    )
+    return lst
 
 
 def create_validation_set(
