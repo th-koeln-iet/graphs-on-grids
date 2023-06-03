@@ -1,6 +1,6 @@
 import numpy as np
 
-from gog.layers import GraphBase
+from gog.layers import GraphConvolution
 from gog.layers.temporal.temporal_layer import (
     TemporalConv,
     GraphLSTM,
@@ -9,7 +9,7 @@ from gog.layers.temporal.temporal_layer import (
 )
 
 
-class GraphBaseTemporalConv(TemporalConv):
+class GraphConvTemporalConv(TemporalConv):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -23,7 +23,7 @@ class GraphBaseTemporalConv(TemporalConv):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
-        super(GraphBaseTemporalConv, self).__init__(
+        super(GraphConvTemporalConv, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -38,7 +38,7 @@ class GraphBaseTemporalConv(TemporalConv):
 
     def build(self, input_shape):
         super().build(input_shape=input_shape)
-        self.graph_layer = GraphBase(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
@@ -52,7 +52,7 @@ class GraphBaseTemporalConv(TemporalConv):
         )
 
 
-class GraphBaseLSTM(GraphLSTM):
+class GraphConvolutionLSTM(GraphLSTM):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -66,7 +66,7 @@ class GraphBaseLSTM(GraphLSTM):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
-        super(GraphBaseLSTM, self).__init__(
+        super(GraphConvolutionLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -81,7 +81,7 @@ class GraphBaseLSTM(GraphLSTM):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphBase(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
@@ -95,7 +95,7 @@ class GraphBaseLSTM(GraphLSTM):
         )
 
 
-class GraphBaseGRU(GraphGRU):
+class GraphConvolutionGRU(GraphGRU):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -109,7 +109,7 @@ class GraphBaseGRU(GraphGRU):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
-        super(GraphBaseGRU, self).__init__(
+        super(GraphConvolutionGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -124,7 +124,7 @@ class GraphBaseGRU(GraphGRU):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphBase(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
@@ -138,7 +138,7 @@ class GraphBaseGRU(GraphGRU):
         )
 
 
-class GraphBaseConvLSTM(GraphConvLSTM):
+class GraphConvolutionConvLSTM(GraphConvLSTM):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -152,7 +152,7 @@ class GraphBaseConvLSTM(GraphConvLSTM):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
-        super(GraphBaseConvLSTM, self).__init__(
+        super(GraphConvolutionConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -167,7 +167,7 @@ class GraphBaseConvLSTM(GraphConvLSTM):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphBase(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
