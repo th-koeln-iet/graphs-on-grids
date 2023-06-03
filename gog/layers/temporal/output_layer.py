@@ -24,9 +24,9 @@ class ConvOutputBlock(keras.layers.Layer):
         return output
 
 
-class LSTMOutputBlock(keras.layers.Layer):
+class RecurrentOutputBlock(keras.layers.Layer):
     def __init__(self, units, activation=None):
-        super(LSTMOutputBlock, self).__init__()
+        super(RecurrentOutputBlock, self).__init__()
         self.units = units
         self.activation = keras.activations.get(activation)
 
