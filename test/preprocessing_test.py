@@ -14,7 +14,7 @@ class TestPreprocessing:
     @classmethod
     def setup_method(cls):
         cls.dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4)
-        cls.feature_names = cls.dataset.graph_feature_names
+        cls.feature_names = cls.dataset.node_feature_names
 
     def test_create_train_test_split(self):
         train, test = create_train_test_split(self.dataset)
@@ -34,8 +34,8 @@ class TestPreprocessing:
 
     def test_mask_labels(self):
         train, test = create_train_test_split(self.dataset)
-        targets = ["0"]
-        nodes_to_mask = [1, 2]
+        targets = self.feature_names
+        nodes_to_mask = [1, 2, 3]
         train_masked, test_masked = mask_labels(train, test, targets, nodes_to_mask)
 
         # assert correct length
@@ -46,13 +46,13 @@ class TestPreprocessing:
         for graph in train_masked:
             masked_nodes = graph.node_features[nodes_to_mask]
             for node in masked_nodes:
-                assert node[0] == 0
+                assert node[0] == 0 and node[1] == 0
 
         # original features matrix is unaffected
         for graph in train:
             masked_nodes = graph.node_features[nodes_to_mask]
             for node in masked_nodes:
-                assert node[0] != 0
+                assert node[0] != 0 and node[1] != 0
 
     def test_mask_labels_wrong_input(self):
         train, test = [], []

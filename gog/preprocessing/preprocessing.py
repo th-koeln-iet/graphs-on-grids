@@ -160,6 +160,27 @@ def _replace_edge_features(num_edges, graph_list, scaled_split: GraphList):
         index += num_edges
 
 
+def _get_feature_indices(
+    X_train: GraphList, X_test: GraphList, targets: List[str], num_nodes: int
+):
+    if len(X_train) != 0:
+        reference_graph = X_train[-1]
+    elif len(X_test) != 0:
+        reference_graph = X_test[-1]
+    else:
+        return []
+    if isinstance(reference_graph, GraphList):
+        reference_graph = reference_graph[-1]
+    feature_indices = [
+        reference_graph.node_feature_names.index(feature_name)
+        for feature_name in targets
+    ]
+    feature_indices = np.reshape(
+        np.repeat(feature_indices, num_nodes), newshape=(len(targets), num_nodes)
+    )
+    return feature_indices
+
+
 def mask_labels(
     X_train: GraphList,
     X_test: GraphList,
@@ -172,8 +193,13 @@ def mask_labels(
             f"Expected both inputs for X_train and X_test to be of type {type(GraphList)}. Received types {type(X_train), type(X_test)}"
         )
 
+    feature_indices = _get_feature_indices(X_train, X_test, targets, len(nodes))
+
     X_train_mask = GraphList(
-        [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_train],
+        [
+            _mask_split(graph.__copy__(), targets, nodes, method, feature_indices)
+            for graph in X_train
+        ],
         X_train.num_nodes,
         X_train.node_feature_names,
         num_edges=X_train.num_edges,
@@ -181,7 +207,10 @@ def mask_labels(
         strict_checks=X_train.strict_checks,
     )
     X_test_mask = GraphList(
-        [_mask_split(graph.__copy__(), targets, nodes, method) for graph in X_test],
+        [
+            _mask_split(graph.__copy__(), targets, nodes, method, feature_indices)
+            for graph in X_test
+        ],
         num_nodes=X_test.num_nodes,
         node_feature_names=X_test.node_feature_names,
         num_edges=X_test.num_edges,
@@ -192,26 +221,33 @@ def mask_labels(
     return X_train_mask, X_test_mask
 
 
-def _mask_split(graph: Graph | GraphList, targets: List[str], nodes: List, method: str):
+def _mask_split(
+    graph: Graph | GraphList,
+    targets: List[str],
+    nodes: List,
+    method: str,
+    feature_indices: List,
+):
     if isinstance(graph, GraphList):
-        return _mask_split_dynamic(graph, targets, nodes, method)
+        return _mask_split_dynamic(graph, targets, nodes, method, feature_indices)
     feature_matrix = graph.node_features
-    feature_indices = [
-        graph.node_feature_names.index(feature_name) for feature_name in targets
-    ]
-    for i, row in enumerate(feature_matrix):
-        if i in nodes:
-            if method == "zeros":
-                row[feature_indices] = 0
+
+    if method == "zeros":
+        feature_matrix[nodes, feature_indices] = 0
+
     return graph
 
 
 def _mask_split_dynamic(
-    graph_sequence: GraphList, targets: List[str], nodes: List, method: str
+    graph_sequence: GraphList,
+    targets: List[str],
+    nodes: List,
+    method: str,
+    feature_indices: List,
 ):
     lst = GraphList(
         data=[
-            _mask_split(graph, targets, nodes, method).__copy__()
+            _mask_split(graph, targets, nodes, method, feature_indices).__copy__()
             for graph in graph_sequence
         ],
         num_nodes=graph_sequence.num_nodes,
