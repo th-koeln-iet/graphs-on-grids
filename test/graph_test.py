@@ -7,7 +7,7 @@ class TestGraphs:
     @classmethod
     def setup_method(cls):
         cls.dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4)
-        cls.feature_names = cls.dataset.graph_feature_names
+        cls.feature_names = cls.dataset.node_feature_names
 
     def test_append_different_node_features_in_graph_list(self):
         graphs = self.dataset.graphs

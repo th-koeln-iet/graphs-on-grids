@@ -250,7 +250,7 @@ class StaticGraphDataset:
                     raise KeyError(
                         "Invalid list of graphs given. Different node features are present"
                     )
-            self.graph_feature_names = features
+            self.node_feature_names = features
 
     def _edge_list_to_adj(self, edge_list) -> np.ndarray:
         size = len(set([n for e in edge_list for n in e]))

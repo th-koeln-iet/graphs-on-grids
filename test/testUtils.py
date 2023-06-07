@@ -32,6 +32,7 @@ def create_graph_dataset(
             )
             graphs.append(
                 Graph(
+                    ID=i,
                     node_features=node_features,
                     node_feature_names=feature_names,
                     edge_features=edge_features,
@@ -40,7 +41,9 @@ def create_graph_dataset(
             )
         else:
             graphs.append(
-                Graph(node_features=node_features, node_feature_names=feature_names)
+                Graph(
+                    ID=i, node_features=node_features, node_feature_names=feature_names
+                )
             )
     dataset = StaticGraphDataset(edge_list=edge_list, graphs=graphs)
     return dataset
@@ -48,10 +51,13 @@ def create_graph_dataset(
 
 def create_test_graph(num_features, num_nodes, num_edges=0, num_edge_features=0):
     feature_names = [str(num) for num in range(num_features)]
-    node_features = np.random.randint(low=0, high=50, size=(num_nodes, num_features))
+    node_features = np.random.randint(low=1, high=50, size=(num_nodes, num_features))
+    graph_id = np.random.randint(-50, 50)
     if num_edge_features > 0 and num_edges > 0:
         edge_features = np.random.randint(
             low=0, high=50, size=(num_edges, num_edge_features)
         )
-        return Graph(node_features, feature_names, edge_features, feature_names)
-    return Graph(node_features, feature_names)
+        return Graph(
+            graph_id, node_features, feature_names, edge_features, feature_names
+        )
+    return Graph(graph_id, node_features, feature_names)
