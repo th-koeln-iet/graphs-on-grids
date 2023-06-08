@@ -32,8 +32,8 @@ def create_train_test_split(
 def create_windowed_train_test_split(
     dataset: StaticGraphDataset,
     window_size,
-    len_labels,
-    step,
+    len_labels=1,
+    step=1,
     start=0,
     train_size=0.8,
     random_state=None,

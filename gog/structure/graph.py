@@ -162,7 +162,39 @@ class GraphList(UserList):
             return [np.array(node_feature_list), np.array(edge_feature_list)]
         return np.array([graph_sequence.to_numpy() for graph_sequence in self])
 
+    def _create_timeseries_columns(self, feature_names, seq_len):
+        column_names = []
+        for i in range(seq_len):
+            columns = feature_names.copy()
+            for col_idx, column in enumerate(columns):
+                columns[col_idx] = f"{column}_{i}"
+            column_names += columns
+        return column_names
+
+    def _to_pandas_dynamic(self):
+        to_numpy = self.to_numpy()
+        if self.edge_feature_names:
+            node_columns = self._create_timeseries_columns(
+                self.node_feature_names, to_numpy[0].shape[1]
+            )
+            edge_columns = self._create_timeseries_columns(
+                self.edge_feature_names, to_numpy[1].shape[1]
+            )
+            df_node_features = pd.DataFrame(
+                np.hstack(np.hstack(self.to_numpy()[0])), columns=node_columns
+            )
+            df_edge_features = pd.DataFrame(
+                np.hstack(np.hstack(self.to_numpy()[1])), columns=edge_columns
+            )
+            return [df_node_features, df_edge_features]
+        columns = self._create_timeseries_columns(
+            self.node_feature_names, to_numpy.shape[1]
+        )
+        return pd.DataFrame(np.hstack(np.hstack(to_numpy)), columns=columns)
+
     def to_pandas(self):
+        if not self.strict_checks:
+            return self._to_pandas_dynamic()
         if self.edge_feature_names:
             df_node_features = pd.DataFrame(
                 np.vstack(self.to_numpy()[0]), columns=self.node_feature_names
