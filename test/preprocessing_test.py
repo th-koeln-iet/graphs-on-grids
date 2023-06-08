@@ -12,8 +12,13 @@ from test.testUtils import create_graph_dataset, create_test_graph
 
 class TestPreprocessing:
     @classmethod
-    def setup_method(cls):
-        cls.dataset = create_graph_dataset(num_graphs=5, num_features=2, num_nodes=4)
+    def setup_class(cls):
+        cls.n_graphs = 5
+        cls.n_features = 2
+        cls.n_nodes = 40
+        cls.dataset = create_graph_dataset(
+            num_graphs=cls.n_graphs, num_features=cls.n_features, num_nodes=cls.n_nodes
+        )
         cls.feature_names = cls.dataset.node_feature_names
 
     def test_create_train_test_split(self):
@@ -80,7 +85,9 @@ class TestPreprocessing:
     def test_create_validation_set_different_size(self):
         graphs = self.dataset.graphs
         graphs_larger = graphs.copy()
-        graphs_larger.append(create_test_graph(num_nodes=4, num_features=2))
+        graphs_larger.append(
+            create_test_graph(num_nodes=self.n_nodes, num_features=self.n_features)
+        )
         with pytest.raises(ValueError):
             create_validation_set(graphs, graphs_larger)
 
@@ -165,7 +172,10 @@ class TestPreprocessing:
 
     def test_apply_scaler_edge_scaling_without_edge_features(self):
         dataset = create_graph_dataset(
-            num_graphs=5, num_features=2, num_nodes=4, create_edge_features=False
+            num_graphs=self.n_graphs,
+            num_features=self.n_features,
+            num_nodes=self.n_nodes,
+            create_edge_features=False,
         )
         create_train_test_split(dataset)
         with pytest.raises(ValueError) as err:
