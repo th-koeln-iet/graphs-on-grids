@@ -14,6 +14,7 @@ class GraphBaseTemporalConv(TemporalConv):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -26,6 +27,7 @@ class GraphBaseTemporalConv(TemporalConv):
         super(GraphBaseTemporalConv, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
@@ -35,6 +37,7 @@ class GraphBaseTemporalConv(TemporalConv):
             weight_regularizer=weight_regularizer,
             bias_initializer=bias_initializer,
         )
+        self.output_seq_len = output_seq_len
 
     def build(self, input_shape):
         super().build(input_shape=input_shape)
@@ -57,6 +60,7 @@ class GraphBaseLSTM(GraphLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -69,6 +73,7 @@ class GraphBaseLSTM(GraphLSTM):
         super(GraphBaseLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
@@ -100,6 +105,7 @@ class GraphBaseGRU(GraphGRU):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -112,6 +118,7 @@ class GraphBaseGRU(GraphGRU):
         super(GraphBaseGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
@@ -143,6 +150,7 @@ class GraphBaseConvLSTM(GraphConvLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -155,6 +163,7 @@ class GraphBaseConvLSTM(GraphConvLSTM):
         super(GraphBaseConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
