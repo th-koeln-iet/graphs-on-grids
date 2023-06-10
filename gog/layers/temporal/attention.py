@@ -14,6 +14,7 @@ class GraphAttentionTemporalConv(TemporalConv):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -26,6 +27,7 @@ class GraphAttentionTemporalConv(TemporalConv):
         super(GraphAttentionTemporalConv, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,
@@ -57,6 +59,7 @@ class GraphAttentionLSTM(GraphLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -69,6 +72,7 @@ class GraphAttentionLSTM(GraphLSTM):
         super(GraphAttentionLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,
@@ -100,6 +104,7 @@ class GraphAttentionGRU(GraphGRU):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -112,6 +117,7 @@ class GraphAttentionGRU(GraphGRU):
         super(GraphAttentionGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,
@@ -143,6 +149,7 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
+        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -155,6 +162,7 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         super(GraphAttentionConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
+            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,

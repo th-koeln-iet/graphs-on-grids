@@ -289,6 +289,24 @@ class StaticGraphDataset:
         adj = np.zeros((size, size), dtype=np.float32)
         for sink, source in edge_list:
             adj[sink - 1][source - 1] = 1
+
+        is_symmetric = np.allclose(adj, adj.T, rtol=1e-05, atol=1e-08)
+        main_diag = np.diag(adj)
+        if main_diag.any():
+            raise ValueError(f"Self-loops are currently not supported.")
+        upper_triangle = np.triu(adj, k=1)
+        lower_triangle = np.tril(adj, k=-1)
+
+        if not upper_triangle.any() or not lower_triangle.any():
+            raise ValueError(
+                f"Incomplete edge list provided. Both edge directions need to be provided"
+            )
+
+        main_diag.any()
+        if not is_symmetric:
+            raise ValueError(
+                f"Adjacency matrix is not symmetric. Please provide edges for both directions."
+            )
         return adj
 
     def set_train_split(self, train: GraphList):
