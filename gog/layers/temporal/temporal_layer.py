@@ -105,7 +105,7 @@ class GraphLSTM(keras.layers.Layer):
         )
 
         self.lstm_out = keras.layers.LSTM(
-            units=self.embedding_size,
+            units=num_nodes * self.embedding_size,
             return_sequences=False,
         )
 
@@ -140,15 +140,14 @@ class GraphLSTM(keras.layers.Layer):
         output_reshaped = tf.reshape(
             output, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
-        # transpose to (num_nodes, batch_size, seq_len, embedding_size)
-        output_reshaped = tf.transpose(output_reshaped, [2, 0, 1, 3])
-        # reshape to (num_nodes * batch_size, seq_len, embedding_size)
+
+        # reshape to (batch_size, seq_len, num_nodes * embedding_size)
         output_reshaped = tf.reshape(
             output_reshaped,
-            shape=(batch_size * num_nodes, seq_len, self.embedding_size),
+            shape=(batch_size, seq_len, num_nodes * self.embedding_size),
         )
 
-        # output dimension (batch_size * num_nodes, seq_len, embedding_size)
+        # output dimension (batch_size, num_nodes * embedding_size)
         output_lstm = self.lstm_out(output_reshaped)
 
         output_lstm_reshaped = tf.reshape(
@@ -202,7 +201,7 @@ class GraphGRU(keras.layers.Layer):
         )
 
         self.gru_out = keras.layers.GRU(
-            units=self.embedding_size,
+            units=num_nodes * self.embedding_size,
             return_sequences=False,
         )
 
@@ -237,15 +236,14 @@ class GraphGRU(keras.layers.Layer):
         output_reshaped = tf.reshape(
             output, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
-        # transpose to (num_nodes, batch_size, seq_len, embedding_size)
-        output_reshaped = tf.transpose(output_reshaped, [2, 0, 1, 3])
-        # reshape to (num_nodes * batch_size, seq_len, embedding_size)
+
+        # reshape to (batch_size, seq_len, num_nodes * embedding_size)
         output_reshaped = tf.reshape(
             output_reshaped,
-            shape=(batch_size * num_nodes, seq_len, self.embedding_size),
+            shape=(batch_size, seq_len, num_nodes * self.embedding_size),
         )
 
-        # output dimension (batch_size * num_nodes, seq_len, embedding_size)
+        # output dimension (batch_size, num_nodes * embedding_size)
         output_gru = self.gru_out(output_reshaped)
 
         output_gru_reshaped = tf.reshape(
