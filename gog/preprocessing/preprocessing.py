@@ -270,9 +270,23 @@ def create_validation_set(
         raise ValueError(
             f"Expected same number of instances in X and y. Received {len(X), len(y)}"
         )
+    if isinstance(X[-1], GraphList):
+        return _create_time_series_validation_set(X, y, validation_size)
 
     split_idx = int(len(X) * validation_size)
     X_train, X_val = X[split_idx:], X[:split_idx]
     split_idx = int(len(y) * validation_size)
     y_train, y_val = y[split_idx:], y[:split_idx]
+    return X_train, X_val, y_train, y_val
+
+
+def _create_time_series_validation_set(X: GraphList, y: GraphList, validation_size=0.2):
+    num_instances = len(X)
+    last_train_index = int(num_instances * (1 - validation_size))
+    X_train, X_val, y_train, y_val = (
+        X[0:last_train_index],
+        X[last_train_index : num_instances + 1],
+        y[0:last_train_index],
+        y[last_train_index : num_instances + 1],
+    )
     return X_train, X_val, y_train, y_val
