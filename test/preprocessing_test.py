@@ -204,7 +204,7 @@ class TestPreprocessingTimeSeries:
         expected_test_len = 0.2 * self.n_graphs - 1
         assert len(X_test) == expected_test_len
         assert (
-                len(X_train) == self.n_graphs - expected_test_len - window_size - len_labels
+            len(X_train) == self.n_graphs - expected_test_len - window_size - len_labels
         )
 
         assert None not in X_train
