@@ -59,7 +59,7 @@ def create_windowed_train_test_split(
         strict_checks=False,
     )
     num_graphs = len(graphs)
-    while start + len_labels < num_graphs - 1:
+    while start + window_size + len_labels < num_graphs:
         end = start + window_size
         current_window = graphs[start:end]
         label_window = graphs[end + 1 : end + 1 + len_labels]
@@ -67,9 +67,9 @@ def create_windowed_train_test_split(
             labels.append(label_window)
             windows.append(current_window)
         start = start + step
-    if num_graphs != len(windows):
+    if num_graphs != len(windows) * window_size:
         logging.warning(
-            f"Dataset of size {num_graphs}, cannot be cleanly divided with window size {window_size}. Discarded {num_graphs - len(windows)} graph instances."
+            f"Dataset of size {num_graphs}, cannot be cleanly divided with window size {window_size}. Discarded {num_graphs - len(windows) * window_size} graph instances."
         )
     dataset.graphs = windows
     if shuffle:
@@ -85,7 +85,7 @@ def create_windowed_train_test_split(
         labels[0:last_train_index],
         labels[last_train_index : num_instances + 1],
     )
-    return X_train, X_test, y_train, y_test
+    return X_train.copy(), X_test.copy(), y_train.copy(), y_test.copy()
 
 
 def apply_scaler(
@@ -247,7 +247,9 @@ def _mask_split_dynamic(
 ):
     lst = GraphList(
         data=[
-            _mask_split(graph, targets, nodes, method, feature_indices).__copy__()
+            _mask_split(
+                graph.__copy__(), targets, nodes, method, feature_indices
+            ).__copy__()
             for graph in graph_sequence
         ],
         num_nodes=graph_sequence.num_nodes,
