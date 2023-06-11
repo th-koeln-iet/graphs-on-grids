@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from gog import create_windowed_train_test_split
 from gog.preprocessing import (
     create_train_test_split,
     mask_labels,
@@ -53,7 +54,7 @@ class TestPreprocessing:
             for node in masked_nodes:
                 assert node[0] == 0 and node[1] == 0
 
-        # original features matrix is unaffected
+        # original feature matrix is unaffected
         for graph in train:
             masked_nodes = graph.node_features[nodes_to_mask]
             for node in masked_nodes:
@@ -181,3 +182,75 @@ class TestPreprocessing:
         with pytest.raises(ValueError) as err:
             apply_scaler(dataset, target="edge")
         assert "contain edge features" in str(err.value)
+
+
+class TestPreprocessingTimeSeries:
+    @classmethod
+    def setup_method(cls):
+        cls.n_graphs = 50
+        cls.n_features = 2
+        cls.n_nodes = 40
+        cls.dataset = create_graph_dataset(
+            num_graphs=cls.n_graphs, num_features=cls.n_features, num_nodes=cls.n_nodes
+        )
+        cls.feature_names = cls.dataset.node_feature_names
+
+    def test_create_train_test_split(self):
+        window_size = 5
+        len_labels = 1
+        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+            self.dataset, window_size=window_size, len_labels=len_labels
+        )
+        expected_test_len = 0.2 * self.n_graphs - 1
+        assert len(X_test) == expected_test_len
+        assert (
+                len(X_train) == self.n_graphs - expected_test_len - window_size - len_labels
+        )
+
+        assert None not in X_train
+        assert None not in X_test
+
+    def test_mask_labels(self):
+        window_size = 5
+        len_labels = 3
+        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+            self.dataset, window_size=window_size, len_labels=len_labels
+        )
+        train_len = len(X_train)
+        test_len = len(X_test)
+        targets = self.feature_names
+        nodes_to_mask = [1, 2, 3]
+        train_masked, test_masked = mask_labels(X_train, X_test, targets, nodes_to_mask)
+
+        # assert correct length
+        assert len(train_masked) == train_len
+        assert len(test_masked) == test_len
+
+        # masked features in selected nodes are actually masked
+        for graph_sequence in train_masked:
+            for graph in graph_sequence:
+                masked_nodes = graph.node_features[nodes_to_mask]
+                for node in masked_nodes:
+                    assert node[0] == 0 and node[1] == 0
+
+        # original feature matrix is unaffected
+        for graph_sequence in y_train:
+            for graph in graph_sequence:
+                masked_nodes = graph.node_features[nodes_to_mask]
+                for node in masked_nodes:
+                    assert node[0] != 0 and node[1] != 0
+
+    def test_create_validation_set(self):
+        graphs = self.dataset.graphs
+        X_train, X_val, y_train, y_val = create_validation_set(
+            graphs, graphs, validation_size=0.4
+        )
+
+        assert len(X_train) == len(y_train) == 30
+        assert len(X_val) == len(y_val) == 20
+
+        for inst in X_train:
+            assert inst not in X_val
+
+        for inst in y_train:
+            assert inst not in y_val
