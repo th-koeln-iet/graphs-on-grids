@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 import gog
+from gog import create_windowed_train_test_split
 from gog.preprocessing import create_train_test_split, mask_labels
 from test.testUtils import create_graph_dataset
 
@@ -167,10 +168,15 @@ class TestLayers:
 class TestTemporalLayers:
     @classmethod
     def setup_class(cls):
-        cls.n_graphs = 5
-        cls.num_features = 2
-        cls.n_nodes = 4
-        cls.dataset = create_graph_dataset(num_graphs=64, num_features=2, num_nodes=4)
+        cls.n_graphs = 64
+        cls.n_features = 2
+        cls.n_nodes = 40
+        cls.dataset = create_graph_dataset(
+            num_graphs=cls.n_graphs,
+            num_features=cls.n_features,
+            num_nodes=cls.n_nodes,
+            create_edge_features=False,
+        )
         cls.feature_names = cls.dataset.node_feature_names
 
         # Model/Training parameters
@@ -179,3 +185,284 @@ class TestTemporalLayers:
         cls.LR = 0.001
         cls.optimizer = tf.keras.optimizers.Adam(learning_rate=cls.LR)
         cls.loss_fn = tf.keras.losses.MeanSquaredError()
+
+        cls.window_size = 5
+        cls.len_labels = 3
+
+        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+            cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
+        )
+        masked_train, masked_test = mask_labels(
+            X_train,
+            X_test,
+            cls.dataset.node_feature_names,
+            np.arange(0, cls.n_nodes // 2),
+        )
+        cls.X_train = masked_train.to_numpy()
+        cls.y_train = y_train.to_numpy()
+
+        cls.X_test = masked_test.to_numpy()
+
+    @classmethod
+    def setup_method(cls):
+        cls.optimizer = tf.keras.optimizers.Adam(learning_rate=cls.LR)
+
+    def test_graph_base_temporal_conv(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphBaseTemporalConv(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphBaseTemporalConv(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.ConvOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_base_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphBaseLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphBaseLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_base_conv_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphBaseConvLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphBaseConvLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_base_gru(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphBaseGRU(adj, embedding_size, output_seq_len=3),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphBaseGRU(adj, embedding_size, output_seq_len=3),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_conv_temporal_conv(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphConvTemporalConv(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphConvTemporalConv(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.ConvOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_conv_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphConvolutionLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphConvolutionLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_conv_conv_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphConvolutionConvLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphConvolutionConvLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_conv_gru(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphConvolutionGRU(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphConvolutionGRU(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_attn_temporal_conv(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphAttentionTemporalConv(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphAttentionTemporalConv(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.ConvOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_attn_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphAttentionLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphAttentionLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_attn_conv_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphAttentionConvLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphAttentionConvLSTM(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_attn_gru(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
+                gog.layers.temporal.GraphAttentionGRU(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.GraphAttentionGRU(
+                    adj, embedding_size, output_seq_len=3
+                ),
+                keras.layers.ReLU(),
+                gog.layers.temporal.RecurrentOutputBlock(
+                    output_seq_len=3, units=self.n_features
+                ),
+            ]
+        )
+        self._execute_temporal_layer_test(model)
+
+    def _execute_temporal_layer_test(self, model):
+        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+        model.fit(
+            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
+        )
+
+        y_pred = model.predict(self.X_test)
+        assert len(y_pred.shape) == 4
+        assert y_pred.shape[1] == self.len_labels
+        assert y_pred.shape[2] == self.n_nodes
+        assert y_pred.shape[3] == self.n_features
