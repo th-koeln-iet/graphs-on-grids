@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import tensorflow as tf
 from tensorflow import keras
 
@@ -54,15 +55,7 @@ class TestLayers:
                 keras.layers.Dense(self.n_features),
             ]
         )
-        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
-        model.fit(
-            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
-        )
-
-        y_pred = model.predict(self.X_test)
-        assert len(y_pred.shape) == 3
-        assert y_pred.shape[1] == self.n_nodes
-        assert y_pred.shape[2] == self.n_features
+        self._execute_layer_test(model)
 
     def test_graph_base_with_mlp(self):
         adj = self.dataset.adjacency_matrix
@@ -79,15 +72,7 @@ class TestLayers:
                 keras.layers.Dense(self.n_features),
             ]
         )
-        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
-        model.fit(
-            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
-        )
-
-        y_pred = model.predict(self.X_test)
-        assert len(y_pred.shape) == 3
-        assert y_pred.shape[1] == self.n_nodes
-        assert y_pred.shape[2] == self.n_features
+        self._execute_layer_test(model)
 
     def test_graph_conv(self):
         adj = self.dataset.adjacency_matrix
@@ -104,15 +89,7 @@ class TestLayers:
                 keras.layers.Dense(self.n_features),
             ]
         )
-        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
-        model.fit(
-            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
-        )
-
-        y_pred = model.predict(self.X_test)
-        assert len(y_pred.shape) == 3
-        assert y_pred.shape[1] == self.n_nodes
-        assert y_pred.shape[2] == self.n_features
+        self._execute_layer_test(model)
 
     def test_graph_attn(self):
         adj = self.dataset.adjacency_matrix
@@ -129,15 +106,7 @@ class TestLayers:
                 keras.layers.Dense(self.n_features),
             ]
         )
-        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
-        model.fit(
-            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
-        )
-
-        y_pred = model.predict(self.X_test)
-        assert len(y_pred.shape) == 3
-        assert y_pred.shape[1] == self.n_nodes
-        assert y_pred.shape[2] == self.n_features
+        self._execute_layer_test(model)
 
     def test_graph_mh_attn(self):
         adj = self.dataset.adjacency_matrix
@@ -154,6 +123,9 @@ class TestLayers:
                 keras.layers.Dense(self.n_features),
             ]
         )
+        self._execute_layer_test(model)
+
+    def _execute_layer_test(self, model):
         model.compile(optimizer=self.optimizer, loss=self.loss_fn)
         model.fit(
             self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
@@ -163,6 +135,175 @@ class TestLayers:
         assert len(y_pred.shape) == 3
         assert y_pred.shape[1] == self.n_nodes
         assert y_pred.shape[2] == self.n_features
+
+
+class TestLayersWithEdgeFeatures:
+    @classmethod
+    def setup_class(cls):
+        cls.n_graphs = 64
+        cls.n_features = 2
+        cls.n_nodes = 40
+        cls.dataset = create_graph_dataset(
+            num_graphs=cls.n_graphs,
+            num_features=cls.n_features,
+            num_nodes=cls.n_nodes,
+            create_edge_features=True,
+        )
+        cls.n_edges = cls.dataset.graphs.num_edges
+        cls.feature_names = cls.dataset.node_feature_names
+        train, test = create_train_test_split(cls.dataset, shuffle=False)
+        masked_train, masked_test = mask_labels(
+            train, test, cls.dataset.node_feature_names, np.arange(0, cls.n_nodes // 2)
+        )
+        cls.X_train = masked_train.to_numpy()
+        cls.y_train = train.to_numpy()
+        cls.X_test = masked_test.to_numpy()
+
+        # Model/Training parameters
+        cls.EPOCHS = 2
+        cls.BATCH_SIZE = 16
+        cls.LR = 0.001
+        cls.loss_fn = tf.keras.losses.MeanSquaredError()
+
+    @classmethod
+    def setup_method(cls):
+        cls.optimizer = tf.keras.optimizers.Adam(learning_rate=cls.LR)
+
+    def test_graph_base(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = self._create_multi_input_model(gog.GraphBase, adj, embedding_size)
+        self._execute_layer_test(model)
+
+    def test_wrong_embedding_size(self):
+        adj = self.dataset.adjacency_matrix
+        gog.GraphLayer(adj, 4)
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, -1)
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 0)
+
+    def test_wrong_hidden_layer_definition(self):
+        adj = self.dataset.adjacency_matrix
+        gog.GraphLayer(adj, 4, hidden_units_node=[4, 3])
+        gog.GraphLayer(adj, 4, hidden_units_edge=[4, 3])
+        gog.GraphLayer(adj, 4, hidden_units_node=(4, 3))
+        gog.GraphLayer(adj, 4, hidden_units_edge=(4, 3))
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 4, hidden_units_node=3)
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 4, hidden_units_edge=3)
+
+    def test_wrong_dropout_range(self):
+        adj = self.dataset.adjacency_matrix
+        gog.GraphLayer(adj, 4, dropout_rate=0)
+        gog.GraphLayer(adj, 4, dropout_rate=1)
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 4, dropout_rate=-0.1)
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 4, dropout_rate=1.1)
+
+    def test_wrong_activation_function(self):
+        adj = self.dataset.adjacency_matrix
+        gog.GraphLayer(adj, 4, activation="relu")
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 4, activation="magic")
+
+    def test_asymmetric_adj_matrix(self):
+        adj = self.dataset.adjacency_matrix.copy()
+        adj[0, 1] = 2
+        with pytest.raises(ValueError):
+            gog.GraphLayer(adj, 4)
+
+    def test_graph_base_with_mlp(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+
+        # test list and tuple as input types
+        model = self._create_multi_input_model(
+            gog.GraphBase,
+            adj,
+            embedding_size,
+            hidden_units_node=(8, 4),
+            hidden_units_edge=[8, 4],
+        )
+        self._execute_layer_test(model)
+
+    def test_graph_conv(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = self._create_multi_input_model(
+            gog.GraphConvolution, adj, embedding_size
+        )
+        self._execute_layer_test(model)
+
+    def test_graph_attn(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = self._create_multi_input_model(gog.GraphAttention, adj, embedding_size)
+        self._execute_layer_test(model)
+
+    def test_graph_attn_with_mlp(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = self._create_multi_input_model(
+            gog.GraphAttention,
+            adj,
+            embedding_size,
+            hidden_units_node=[8, 4],
+            hidden_units_edge=[8, 4],
+        )
+        self._execute_layer_test(model)
+
+    def test_graph_mh_attn(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = self._create_multi_input_model(
+            gog.MultiHeadGraphAttention, adj, embedding_size
+        )
+        self._execute_layer_test(model)
+
+    def _execute_layer_test(self, model):
+        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+        model.fit(
+            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
+        )
+
+        y_pred = model.predict(self.X_test)
+        assert len(y_pred.shape) == 3
+        assert y_pred.shape[1] == self.n_nodes
+        assert y_pred.shape[2] == self.n_features
+
+    def _create_multi_input_model(
+        self,
+        graph_layer,
+        adj,
+        embedding_size,
+        hidden_units_node=None,
+        hidden_units_edge=None,
+    ):
+        if hidden_units_node is None:
+            hidden_units_node = []
+        if hidden_units_edge is None:
+            hidden_units_edge = []
+
+        input_layer = keras.layers.Input((self.n_nodes, self.n_features))
+        input_layer_edge = keras.layers.Input((self.n_edges, self.n_features))
+        gnn = graph_layer(adj, embedding_size, hidden_units_node, hidden_units_edge)(
+            [input_layer, input_layer_edge]
+        )
+        gnn = keras.layers.BatchNormalization()(gnn)
+        gnn = keras.layers.ReLU()(gnn)
+        gnn = graph_layer(adj, embedding_size, hidden_units_node, hidden_units_edge)(
+            [gnn, input_layer_edge]
+        )
+        gnn = keras.layers.BatchNormalization()(gnn)
+        gnn = keras.layers.ReLU()(gnn)
+        gnn = graph_layer(adj, embedding_size, hidden_units_node, hidden_units_edge)(
+            [gnn, input_layer_edge]
+        )
+        out = tf.keras.layers.Dense(self.n_features)(gnn)
+        return keras.models.Model(inputs=[input_layer, input_layer_edge], outputs=out)
 
 
 class TestTemporalLayers:
