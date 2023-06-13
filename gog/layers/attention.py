@@ -177,6 +177,7 @@ class MultiHeadGraphAttention(keras.layers.Layer):
         adjacency_matrix: np.ndarray,
         embedding_size,
         hidden_units_node=None,
+        hidden_units_attention=None,
         dropout_rate=0,
         num_heads=3,
         use_bias=True,
@@ -187,14 +188,14 @@ class MultiHeadGraphAttention(keras.layers.Layer):
         concat_heads=True,
     ):
         super(MultiHeadGraphAttention, self).__init__()
-        self.hidden_units_node = hidden_units_node
         self.concat_heads = concat_heads
         self.num_heads = num_heads
         self.activation = keras.activations.get(activation)
         self.attention_layers = [
             GraphAttention(
                 adjacency_matrix=adjacency_matrix,
-                hidden_units_node=None,
+                hidden_units_node=hidden_units_node,
+                hidden_units_attention=hidden_units_attention,
                 embedding_size=embedding_size,
                 dropout_rate=dropout_rate,
                 use_bias=use_bias,

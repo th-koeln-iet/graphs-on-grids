@@ -28,9 +28,9 @@ class GraphLayer(keras.layers.Layer):
             raise ValueError(
                 f"Received invalid embedding_size, expected positive integer. Received embedding_size={embedding_size}"
             )
-        if not isinstance(hidden_units_node, (list, type(None))) or not isinstance(
-            hidden_units_edge, (list, type(None))
-        ):
+        if not isinstance(
+            hidden_units_node, (list, tuple, type(None))
+        ) or not isinstance(hidden_units_edge, (list, tuple, type(None))):
             raise ValueError(
                 f"Received invalid type for hidden units parameters. Hidden units need to be of type 'list'"
             )
@@ -43,6 +43,11 @@ class GraphLayer(keras.layers.Layer):
                 f"Received invalid value for dropout_rate parameter. Only values between 0 and 1 are valid"
             )
         self.dropout_rate = dropout_rate
+
+        if not np.allclose(
+            adjacency_matrix, adjacency_matrix.T, rtol=1e-05, atol=1e-08
+        ):
+            raise ValueError(f"Expected symmetric adjacency matrix.")
         self.adjacency_matrix = adjacency_matrix
         self.use_bias = use_bias
         self.activation = keras.activations.get(activation)
@@ -51,8 +56,8 @@ class GraphLayer(keras.layers.Layer):
         self.bias_initializer = keras.initializers.get(bias_initializer)
 
         # Adjacency matrix with self loops
-        self._A_tilde = tf.math.add(
-            self.adjacency_matrix, tf.eye(self.adjacency_matrix.shape[0])
+        self._A_tilde = tf.linalg.set_diag(
+            self.adjacency_matrix, tf.ones(self.adjacency_matrix.shape[0])
         )
 
         # Edge list
