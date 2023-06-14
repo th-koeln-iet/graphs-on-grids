@@ -607,3 +607,142 @@ class TestTemporalLayers:
         assert y_pred.shape[1] == self.len_labels
         assert y_pred.shape[2] == self.n_nodes
         assert y_pred.shape[3] == self.n_features
+
+
+class TestTemporalLayersWithEdgeFeatures:
+    @classmethod
+    def setup_class(cls):
+        cls.n_graphs = 64
+        cls.n_features = 2
+        cls.n_nodes = 40
+        cls.dataset = create_graph_dataset(
+            num_graphs=cls.n_graphs,
+            num_features=cls.n_features,
+            num_nodes=cls.n_nodes,
+            create_edge_features=True,
+        )
+        cls.feature_names = cls.dataset.node_feature_names
+        cls.n_edges = cls.dataset.graphs.num_edges
+
+        # Model/Training parameters
+        cls.EPOCHS = 2
+        cls.BATCH_SIZE = 16
+        cls.LR = 0.001
+        cls.optimizer = tf.keras.optimizers.Adam(learning_rate=cls.LR)
+        cls.loss_fn = tf.keras.losses.MeanSquaredError()
+
+        cls.window_size = 5
+        cls.len_labels = 3
+
+        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+            cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
+        )
+        masked_train, masked_test = mask_labels(
+            X_train,
+            X_test,
+            cls.dataset.node_feature_names,
+            np.arange(0, cls.n_nodes // 2),
+        )
+        cls.X_train = masked_train.to_numpy()
+        cls.y_train = y_train.to_numpy()
+
+        cls.X_test = masked_test.to_numpy()
+
+    @classmethod
+    def setup_method(cls):
+        cls.optimizer = tf.keras.optimizers.Adam(learning_rate=cls.LR)
+
+    def test_graph_base_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 2
+        model = self._create_multi_input_temporal_model(
+            gog.GraphConvolutionLSTM,
+            gog.RecurrentOutputBlock,
+            adj,
+            embedding_size,
+            self.len_labels,
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_base_gru(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 2
+        model = self._create_multi_input_temporal_model(
+            gog.GraphAttentionGRU,
+            gog.RecurrentOutputBlock,
+            adj,
+            embedding_size,
+            self.len_labels,
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_base_conv_lstm(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 2
+        model = self._create_multi_input_temporal_model(
+            gog.GraphBaseConvLSTM,
+            gog.RecurrentOutputBlock,
+            adj,
+            embedding_size,
+            self.len_labels,
+        )
+        self._execute_temporal_layer_test(model)
+
+    def test_graph_base_temporal_conv(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 2
+        model = self._create_multi_input_temporal_model(
+            gog.GraphBaseTemporalConv,
+            gog.ConvOutputBlock,
+            adj,
+            embedding_size,
+            self.len_labels,
+        )
+        self._execute_temporal_layer_test(model)
+
+    def _execute_temporal_layer_test(self, model):
+        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+        model.fit(
+            self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
+        )
+
+        y_pred = model.predict(self.X_test)
+        assert len(y_pred.shape) == 4
+        assert y_pred.shape[1] == self.len_labels
+        assert y_pred.shape[2] == self.n_nodes
+        assert y_pred.shape[3] == self.n_features
+
+    def _create_multi_input_temporal_model(
+        self,
+        graph_layer,
+        output_layer,
+        adj,
+        embedding_size,
+        output_seq_len,
+        hidden_units_node=None,
+        hidden_units_edge=None,
+    ):
+        if hidden_units_node is None:
+            hidden_units_node = []
+        if hidden_units_edge is None:
+            hidden_units_edge = []
+
+        input_layer = keras.layers.Input(
+            (self.window_size, self.n_nodes, self.n_features)
+        )
+        input_layer_edge = keras.layers.Input(
+            (self.window_size, self.n_edges, self.n_features)
+        )
+        gnn = graph_layer(
+            adj, embedding_size, output_seq_len, hidden_units_node, hidden_units_edge
+        )([input_layer, input_layer_edge])
+        gnn = keras.layers.ReLU()(gnn)
+        gnn = graph_layer(
+            adj, embedding_size, output_seq_len, hidden_units_node, hidden_units_edge
+        )([gnn, input_layer_edge])
+        gnn = keras.layers.ReLU()(gnn)
+        gnn = graph_layer(
+            adj, embedding_size, output_seq_len, hidden_units_node, hidden_units_edge
+        )([gnn, input_layer_edge])
+        out = output_layer(self.len_labels, self.n_features)(gnn)
+        return keras.models.Model(inputs=[input_layer, input_layer_edge], outputs=out)

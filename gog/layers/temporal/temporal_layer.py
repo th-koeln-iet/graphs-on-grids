@@ -34,30 +34,66 @@ class TemporalConv(keras.layers.Layer):
         self.graph_layer = None
 
     def build(self, input_shape):
-        batch_size, seq_len, num_nodes, num_features = input_shape
+        if not isinstance(input_shape, list):
+            batch_size, seq_len, num_nodes, num_node_features = input_shape
+        else:
+            batch_size, seq_len, num_nodes, num_node_features = input_shape[0]
+            _, _, num_edges, num_edge_features = input_shape[1]
+
         self.tmp_conv1 = keras.layers.Conv2D(
             filters=seq_len,
-            kernel_size=(num_features, 1),
+            kernel_size=(num_node_features, 1),
             padding="same",
             activation="relu",
+            name="conv_1",
         )
         self.tmp_conv2 = keras.layers.Conv2D(
             filters=self.output_seq_len,
             kernel_size=(self.embedding_size, 1),
             padding="same",
             activation="relu",
+            name="conv_2",
         )
+        if isinstance(input_shape, list):
+            self.tmp_conv_edge = keras.layers.Conv2D(
+                filters=seq_len,
+                kernel_size=(num_edge_features, 1),
+                padding="same",
+                activation="relu",
+                name="conv_edge",
+            )
 
     def call(self, inputs, *args, **kwargs):
-        _, seq_len, num_nodes, num_features = inputs.get_shape().as_list()
-        inputs = tf.transpose(inputs, perm=[0, 2, 3, 1])
+        if isinstance(inputs, list):
+            node_features, edge_features = inputs
+            _, seq_len, num_nodes, num_node_features = inputs[0].get_shape().as_list()
+            _, _, num_edges, num_edge_features = inputs[1].get_shape().as_list()
+            edge_features = tf.transpose(edge_features, perm=[0, 2, 3, 1])
+            # batch_size, num_edges, num_edge_features, seq_len
+            temporal_conv_edge = self.tmp_conv_edge(edge_features)
+
+            # batch_size, seq_len, num_edges, num_edge_features
+            conv_edge_transposed = tf.transpose(temporal_conv_edge, perm=[0, 3, 1, 2])
+            reshaped_edge = tf.reshape(
+                conv_edge_transposed, shape=(-1, num_edges, num_edge_features)
+            )
+        else:
+            _, seq_len, num_nodes, num_node_features = inputs.get_shape().as_list()
+            node_features = inputs
+        node_features = tf.transpose(node_features, perm=[0, 2, 3, 1])
         # batch_size, num_nodes, num_features, seq_len
-        temporal_conv_1 = self.tmp_conv1(inputs)
+        temporal_conv_1 = self.tmp_conv1(node_features)
 
         # batch_size, seq_len, num_nodes, num_features
         conv_1_transposed = tf.transpose(temporal_conv_1, perm=[0, 3, 1, 2])
-        reshaped = tf.reshape(conv_1_transposed, shape=(-1, num_nodes, num_features))
-        graph_output = self.graph_layer(reshaped)
+        reshaped_node = tf.reshape(
+            conv_1_transposed, shape=(-1, num_nodes, num_node_features)
+        )
+        graph_output = (
+            self.graph_layer(reshaped_node)
+            if not isinstance(inputs, list)
+            else self.graph_layer([reshaped_node, reshaped_edge])
+        )
         graph_output_reshaped = tf.reshape(
             graph_output, shape=(-1, seq_len, num_nodes, self.embedding_size)
         )
@@ -97,10 +133,14 @@ class GraphLSTM(keras.layers.Layer):
         self.graph_layer = None
 
     def build(self, input_shape):
-        batch_size, seq_len, num_nodes, num_features = input_shape
+        if not isinstance(input_shape, list):
+            batch_size, seq_len, num_nodes, num_node_features = input_shape
+        else:
+            batch_size, seq_len, num_nodes, num_node_features = input_shape[0]
+            _, _, num_edges, num_edge_features = input_shape[1]
 
         self.lstm_in = keras.layers.LSTM(
-            units=num_features,
+            units=num_node_features,
             return_sequences=True,
         )
 
@@ -113,28 +153,69 @@ class GraphLSTM(keras.layers.Layer):
             units=self.output_seq_len * self.embedding_size, activation=self.activation
         )
 
-    def call(self, inputs, *args, **kwargs):
-        shape = tf.shape(inputs)
-        batch_size, seq_len, num_nodes, num_features = (
-            shape[0],
-            shape[1],
-            shape[2],
-            shape[3],
-        )
+        if isinstance(input_shape, list):
+            self.lstm_edge = keras.layers.LSTM(
+                units=num_edge_features,
+                return_sequences=True,
+            )
 
-        inputs = tf.transpose(inputs, [2, 0, 1, 3])
+            self.tmp_conv_edge = keras.layers.Conv2D(
+                filters=seq_len,
+                kernel_size=(num_edge_features, 1),
+                padding="same",
+                activation="relu",
+                name="conv_edge",
+            )
+
+    def call(self, inputs, *args, **kwargs):
+        if isinstance(inputs, list):
+            (
+                batch_size,
+                edge_features,
+                edge_seq_len,
+                node_features,
+                num_edge_features,
+                num_edges,
+                num_node_features,
+                num_nodes,
+                seq_len,
+            ) = init_shape_variables(inputs)
+
+            reshaped_edge = self.compute_edge_features_temporal(
+                batch_size,
+                edge_features,
+                edge_seq_len,
+                num_edge_features,
+                num_edges,
+                seq_len,
+            )
+        else:
+            node_features = inputs
+            node_feature_shape = tf.shape(inputs)
+            batch_size, seq_len, num_nodes, num_node_features = (
+                node_feature_shape[0],
+                node_feature_shape[1],
+                node_feature_shape[2],
+                node_feature_shape[3],
+            )
+
+        node_features = tf.transpose(node_features, [2, 0, 1, 3])
         lstm_input = tf.reshape(
-            inputs, shape=(batch_size * num_nodes, seq_len, num_features)
+            node_features, shape=(batch_size * num_nodes, seq_len, num_node_features)
         )
         lstm_in_output = self.lstm_in(lstm_input)
 
         # reshape to (batch_size * seq_len, num_nodes, num_features
         reshaped = tf.reshape(
-            lstm_in_output, shape=(num_nodes, batch_size, seq_len, num_features)
+            lstm_in_output, shape=(num_nodes, batch_size, seq_len, num_node_features)
         )
         reshaped = tf.transpose(reshaped, perm=[1, 2, 0, 3])
-        reshaped = tf.reshape(reshaped, shape=(-1, num_nodes, num_features))
-        output = self.graph_layer(reshaped)
+        reshaped_node = tf.reshape(reshaped, shape=(-1, num_nodes, num_node_features))
+        output = (
+            self.graph_layer(reshaped_node)
+            if not isinstance(inputs, list)
+            else self.graph_layer([reshaped_node, reshaped_edge])
+        )
 
         # reshape to (batch_size, seq_len, num_nodes, embedding_size)
         output_reshaped = tf.reshape(
@@ -161,6 +242,34 @@ class GraphLSTM(keras.layers.Layer):
             (batch_size, self.output_seq_len, num_nodes, self.embedding_size),
         )
         return output_sequence
+
+    def compute_edge_features_temporal(
+        self,
+        batch_size,
+        edge_features,
+        edge_seq_len,
+        num_edge_features,
+        num_edges,
+        seq_len,
+    ):
+        edge_features = tf.transpose(edge_features, [2, 0, 1, 3])
+        lstm_edge = tf.reshape(
+            edge_features,
+            shape=(batch_size * num_edges, edge_seq_len, num_edge_features),
+        )
+        lstm_edge_output = self.lstm_edge(lstm_edge)
+        # reshape to (batch_size * seq_len, num_edges, num_edge_features
+        reshaped = tf.reshape(
+            lstm_edge_output,
+            shape=(batch_size, num_edges, edge_seq_len, num_edge_features),
+        )
+        reshaped = tf.transpose(reshaped, perm=[0, 1, 3, 2])
+        # stretch / compress to seq_len
+        conv_edge = self.tmp_conv_edge(reshaped)
+        reshaped_edge = tf.reshape(
+            conv_edge, shape=(batch_size * seq_len, num_edges, num_edge_features)
+        )
+        return reshaped_edge
 
 
 class GraphGRU(keras.layers.Layer):
@@ -193,10 +302,14 @@ class GraphGRU(keras.layers.Layer):
         self.graph_layer = None
 
     def build(self, input_shape):
-        batch_size, seq_len, num_nodes, num_features = input_shape
+        if not isinstance(input_shape, list):
+            batch_size, seq_len, num_nodes, num_node_features = input_shape
+        else:
+            batch_size, seq_len, num_nodes, num_node_features = input_shape[0]
+            _, _, num_edges, num_edge_features = input_shape[1]
 
         self.gru_in = keras.layers.GRU(
-            units=num_features,
+            units=num_node_features,
             return_sequences=True,
         )
 
@@ -208,29 +321,69 @@ class GraphGRU(keras.layers.Layer):
         self.dense_out = keras.layers.Dense(
             units=self.output_seq_len * self.embedding_size, activation=self.activation
         )
+        if isinstance(input_shape, list):
+            self.gru_edge = keras.layers.GRU(
+                units=num_edge_features,
+                return_sequences=True,
+            )
+
+            self.tmp_conv_edge = keras.layers.Conv2D(
+                filters=seq_len,
+                kernel_size=(num_edge_features, 1),
+                padding="same",
+                activation="relu",
+                name="conv_edge",
+            )
 
     def call(self, inputs, *args, **kwargs):
-        shape = tf.shape(inputs)
-        batch_size, seq_len, num_nodes, num_features = (
-            shape[0],
-            shape[1],
-            shape[2],
-            shape[3],
-        )
+        if isinstance(inputs, list):
+            (
+                batch_size,
+                edge_features,
+                edge_seq_len,
+                node_features,
+                num_edge_features,
+                num_edges,
+                num_node_features,
+                num_nodes,
+                seq_len,
+            ) = init_shape_variables(inputs)
 
-        inputs = tf.transpose(inputs, [2, 0, 1, 3])
+            reshaped_edge = self.compute_edge_features_temporal(
+                batch_size,
+                edge_features,
+                edge_seq_len,
+                num_edge_features,
+                num_edges,
+                seq_len,
+            )
+        else:
+            node_features = inputs
+            node_feature_shape = tf.shape(inputs)
+            batch_size, seq_len, num_nodes, num_node_features = (
+                node_feature_shape[0],
+                node_feature_shape[1],
+                node_feature_shape[2],
+                node_feature_shape[3],
+            )
+
+        node_features = tf.transpose(node_features, [2, 0, 1, 3])
         gru_input = tf.reshape(
-            inputs, shape=(batch_size * num_nodes, seq_len, num_features)
+            node_features, shape=(batch_size * num_nodes, seq_len, num_node_features)
         )
         gru_in_output = self.gru_in(gru_input)
 
         # reshape to (batch_size * seq_len, num_nodes, num_features
         reshaped = tf.reshape(
-            gru_in_output, shape=(num_nodes, batch_size, seq_len, num_features)
+            gru_in_output, shape=(num_nodes, batch_size, seq_len, num_node_features)
         )
         reshaped = tf.transpose(reshaped, perm=[1, 2, 0, 3])
-        reshaped = tf.reshape(reshaped, shape=(-1, num_nodes, num_features))
-        output = self.graph_layer(reshaped)
+        reshaped_node = tf.reshape(reshaped, shape=(-1, num_nodes, num_node_features))
+        output = (
+            self.graph_layer(reshaped_node)
+            if not isinstance(inputs, list)
+            else self.graph_layer([reshaped_node, reshaped_edge])
+        )
 
         # reshape to (batch_size, seq_len, num_nodes, embedding_size)
         output_reshaped = tf.reshape(
@@ -257,6 +410,34 @@ class GraphGRU(keras.layers.Layer):
             (batch_size, self.output_seq_len, num_nodes, self.embedding_size),
         )
         return output_sequence
+
+    def compute_edge_features_temporal(
+        self,
+        batch_size,
+        edge_features,
+        edge_seq_len,
+        num_edge_features,
+        num_edges,
+        seq_len,
+    ):
+        edge_features = tf.transpose(edge_features, [2, 0, 1, 3])
+        gru_edge = tf.reshape(
+            edge_features,
+            shape=(batch_size * num_edges, edge_seq_len, num_edge_features),
+        )
+        gru_edge_output = self.gru_edge(gru_edge)
+        # reshape to (batch_size * seq_len, num_edges, num_edge_features
+        reshaped = tf.reshape(
+            gru_edge_output,
+            shape=(batch_size, num_edges, edge_seq_len, num_edge_features),
+        )
+        reshaped = tf.transpose(reshaped, perm=[0, 1, 3, 2])
+        # stretch / compress to seq_len
+        conv_edge = self.tmp_conv_edge(reshaped)
+        reshaped_edge = tf.reshape(
+            conv_edge, shape=(batch_size * seq_len, num_edges, num_edge_features)
+        )
+        return reshaped_edge
 
 
 class GraphConvLSTM(keras.layers.Layer):
@@ -289,11 +470,15 @@ class GraphConvLSTM(keras.layers.Layer):
         self.graph_layer = None
 
     def build(self, input_shape):
-        batch_size, seq_len, num_nodes, num_features = input_shape
+        if not isinstance(input_shape, list):
+            batch_size, seq_len, num_nodes, num_node_features = input_shape
+        else:
+            batch_size, seq_len, num_nodes, num_node_features = input_shape[0]
+            _, _, num_edges, num_edge_features = input_shape[1]
 
         self.lstm_in = keras.layers.ConvLSTM2D(
             filters=1,
-            kernel_size=(num_features, 1),
+            kernel_size=(num_node_features, 1),
             padding="same",
             activation="relu",
             return_sequences=True,
@@ -311,18 +496,58 @@ class GraphConvLSTM(keras.layers.Layer):
             units=self.output_seq_len * self.embedding_size, activation=self.activation
         )
 
+        if isinstance(input_shape, list):
+            self.lstm_edge = keras.layers.ConvLSTM2D(
+                filters=1,
+                kernel_size=(num_node_features, 1),
+                padding="same",
+                activation="relu",
+                return_sequences=True,
+            )
+
+            self.tmp_conv_edge = keras.layers.Conv2D(
+                filters=seq_len,
+                kernel_size=(num_edge_features, 1),
+                padding="same",
+                activation="relu",
+                name="conv_edge",
+            )
+
     def call(self, inputs, *args, **kwargs):
-        shape = tf.shape(inputs)
-        batch_size, seq_len, num_nodes, num_features = (
-            shape[0],
-            shape[1],
-            shape[2],
-            shape[3],
-        )
+        if isinstance(inputs, list):
+            (
+                batch_size,
+                edge_features,
+                edge_seq_len,
+                node_features,
+                num_edge_features,
+                num_edges,
+                num_node_features,
+                num_nodes,
+                seq_len,
+            ) = init_shape_variables(inputs)
+
+            reshaped_edge = self.compute_edge_features_temporal(
+                batch_size,
+                edge_features,
+                edge_seq_len,
+                num_edge_features,
+                num_edges,
+                seq_len,
+            )
+        else:
+            node_features = inputs
+            node_feature_shape = tf.shape(inputs)
+            batch_size, seq_len, num_nodes, num_node_features = (
+                node_feature_shape[0],
+                node_feature_shape[1],
+                node_feature_shape[2],
+                node_feature_shape[3],
+            )
 
         # add empty channel dimension
-        inputs = tf.transpose(inputs, [2, 0, 1, 3])
-        lstm_input = tf.expand_dims(inputs, axis=-1)
+        node_features = tf.transpose(node_features, [2, 0, 1, 3])
+        lstm_input = tf.expand_dims(node_features, axis=-1)
 
         # remove channel dimension before graph layer
         # output dimension(batch_size, seq_len, num_nodes, num_features)
@@ -330,11 +555,15 @@ class GraphConvLSTM(keras.layers.Layer):
 
         # reshape to (batch_size * seq_len, num_nodes, num_features
         reshaped = tf.reshape(
-            lstm_in_output, shape=(num_nodes, batch_size, seq_len, num_features)
+            lstm_in_output, shape=(num_nodes, batch_size, seq_len, num_node_features)
         )
         reshaped = tf.transpose(reshaped, perm=[1, 2, 0, 3])
-        reshaped = tf.reshape(reshaped, shape=(-1, num_nodes, num_features))
-        output = self.graph_layer(reshaped)
+        reshaped_node = tf.reshape(reshaped, shape=(-1, num_nodes, num_node_features))
+        output = (
+            self.graph_layer(reshaped_node)
+            if not isinstance(inputs, list)
+            else self.graph_layer([reshaped_node, reshaped_edge])
+        )
 
         # reshape to (batch_size, seq_len, num_nodes, embedding_size)
         output_reshaped = tf.reshape(
@@ -357,3 +586,56 @@ class GraphConvLSTM(keras.layers.Layer):
             (batch_size, self.output_seq_len, num_nodes, self.embedding_size),
         )
         return output_sequence
+
+    def compute_edge_features_temporal(
+        self,
+        batch_size,
+        edge_features,
+        edge_seq_len,
+        num_edge_features,
+        num_edges,
+        seq_len,
+    ):
+        edge_features = tf.transpose(edge_features, [2, 0, 1, 3])
+        edge_features = tf.expand_dims(edge_features, axis=-1)
+        lstm_edge_output = tf.squeeze(self.lstm_edge(edge_features), axis=-1)
+        # reshape to (batch_size * seq_len, num_edges, num_edge_features
+        reshaped = tf.reshape(
+            lstm_edge_output,
+            shape=(batch_size, num_edges, edge_seq_len, num_edge_features),
+        )
+        reshaped = tf.transpose(reshaped, perm=[0, 1, 3, 2])
+        # stretch / compress to seq_len
+        conv_edge = self.tmp_conv_edge(reshaped)
+        reshaped_edge = tf.reshape(
+            conv_edge, shape=(batch_size * seq_len, num_edges, num_edge_features)
+        )
+        return reshaped_edge
+
+
+def init_shape_variables(inputs):
+    node_features, edge_features = inputs
+    node_feature_shape = tf.shape(node_features)
+    batch_size, seq_len, num_nodes, num_node_features = (
+        node_feature_shape[0],
+        node_feature_shape[1],
+        node_feature_shape[2],
+        node_feature_shape[3],
+    )
+    edge_feature_shape = tf.shape(edge_features)
+    edge_seq_len, num_edges, num_edge_features = (
+        edge_feature_shape[1],
+        edge_feature_shape[2],
+        edge_feature_shape[3],
+    )
+    return (
+        batch_size,
+        edge_features,
+        edge_seq_len,
+        node_features,
+        num_edge_features,
+        num_edges,
+        num_node_features,
+        num_nodes,
+        seq_len,
+    )
