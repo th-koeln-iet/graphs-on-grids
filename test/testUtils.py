@@ -6,8 +6,17 @@ from gog.structure.graph import GraphList, Graph, StaticGraphDataset
 
 
 def create_graph_dataset(
-    num_graphs, num_features, num_nodes, create_edge_features=True
+    num_graphs,
+    num_features,
+    num_nodes,
+    create_edge_features=True,
+    num_features_edge=None,
 ) -> StaticGraphDataset:
+    if create_edge_features:
+        if num_features_edge is None:
+            num_features_edge = num_features
+        edge_feature_names = [str(num) for num in range(num_features_edge)]
+
     feature_names = [str(num) for num in range(num_features)]
     edge_list = []
     edge_generation_count = 0
@@ -20,7 +29,7 @@ def create_graph_dataset(
         GraphList(
             node_feature_names=feature_names,
             num_nodes=num_nodes,
-            edge_feature_names=feature_names,
+            edge_feature_names=edge_feature_names,
             num_edges=len(edge_list),
         )
         if create_edge_features
@@ -33,7 +42,7 @@ def create_graph_dataset(
         )
         if create_edge_features:
             edge_features = np.random.randint(
-                low=1, high=50, size=(len(edge_list), num_features)
+                low=1, high=50, size=(len(edge_list), num_features_edge)
             )
             graphs.append(
                 Graph(
@@ -41,7 +50,7 @@ def create_graph_dataset(
                     node_features=node_features,
                     node_feature_names=feature_names,
                     edge_features=edge_features,
-                    edge_feature_names=feature_names,
+                    edge_feature_names=edge_feature_names,
                 )
             )
         else:
@@ -66,6 +75,24 @@ def create_test_graph(num_features, num_nodes, num_edges=0, num_edge_features=0)
             graph_id, node_features, feature_names, edge_features, feature_names
         )
     return Graph(graph_id, node_features, feature_names)
+
+
+def create_test_graph_sequence(
+    num_graphs, num_features, num_nodes, num_edges=0, num_edge_features=0
+):
+    graphs = [
+        create_test_graph(num_features, num_nodes, num_edges, num_edge_features)
+        for _ in range(num_graphs)
+    ]
+    graph_list = GraphList(
+        num_nodes=num_nodes,
+        node_feature_names=graphs[-1].node_feature_names,
+        num_edges=num_edges,
+        edge_feature_names=graphs[-1].edge_feature_names,
+        strict_checks=False,
+    )
+    graph_list.extend(graphs)
+    return graph_list
 
 
 def _create_edge_list(num_nodes):
