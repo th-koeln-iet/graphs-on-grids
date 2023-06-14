@@ -72,6 +72,8 @@ def create_windowed_train_test_split(
             f"Dataset of size {num_graphs}, cannot be cleanly divided with window size {window_size}. Discarded {num_graphs - len(windows) * window_size} graph instances."
         )
     dataset.graphs = windows
+    dataset.graphs.strict_checks = False
+
     if shuffle:
         np.random.seed(random_state)
         np.random.shuffle(windows)

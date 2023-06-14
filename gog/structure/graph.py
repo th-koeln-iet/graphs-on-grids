@@ -81,37 +81,49 @@ class GraphList(UserList):
 
     def append(self, item: Graph) -> None:
         if self.strict_checks:
-            if set(item.node_feature_names) != set(self.node_feature_names):
-                raise ValueError(
-                    f"Node features do not match other graphs. Expected features {self.node_feature_names}"
-                )
-            if (
-                self.data
-                and item.node_features.shape != self.data[-1].node_features.shape
-            ):
-                raise ValueError(
-                    f"Different node feature dimensions provided. Expected {self.data[-1].node_features.shape} but received {item.node_features.shape}"
-                )
-            if (
-                item.edge_feature_names
-                and self.edge_feature_names
-                and set(item.edge_feature_names) != set(self.edge_feature_names)
-            ):
-                raise ValueError(
-                    f"Edge features do not match other graphs. Expected features {self.node_feature_names}"
-                )
-
-            # edge features exist and are of the same shape
-            if (
-                self.data
-                and isinstance(item.edge_features, np.ndarray)
-                and isinstance(self.data[-1].edge_features, np.ndarray)
-                and item.edge_features.shape != self.data[-1].edge_features.shape
-            ):
-                raise ValueError(
-                    f"Different edge feature dimensions provided. Expected {self.data[-1].edge_features.shape} but received {item.edge_features.shape}"
-                )
+            self.validate_graph_structure(item)
+        else:
+            self.validate_graph_sequence_structure(item)
         super().append(item)
+
+    def validate_graph_sequence_structure(self, item):
+        if self.data and len(item) != len(self.data[-1]):
+            raise ValueError(
+                f"Different window size provided. Expected {len(self.data[-1])} but received {len(item)}"
+            )
+        for graph in item:
+            self.validate_graph_structure(graph)
+
+    def validate_graph_structure(self, item):
+        compare_to = self.data[-1] if self.data else None
+        if isinstance(compare_to, GraphList):
+            compare_to = compare_to[-1]
+        if set(item.node_feature_names) != set(self.node_feature_names):
+            raise ValueError(
+                f"Node features do not match other graphs. Expected features {self.node_feature_names}"
+            )
+        if self.data and item.node_features.shape != compare_to.node_features.shape:
+            raise ValueError(
+                f"Different node feature dimensions provided. Expected {compare_to.node_features.shape} but received {item.node_features.shape}"
+            )
+        if (
+            item.edge_feature_names
+            and self.edge_feature_names
+            and set(item.edge_feature_names) != set(self.edge_feature_names)
+        ):
+            raise ValueError(
+                f"Edge features do not match other graphs. Expected features {self.node_feature_names}"
+            )
+        # edge features exist and are of the same shape
+        if (
+            self.data
+            and isinstance(item.edge_features, np.ndarray)
+            and isinstance(compare_to.edge_features, np.ndarray)
+            and item.edge_features.shape != compare_to.edge_features.shape
+        ):
+            raise ValueError(
+                f"Different edge feature dimensions provided. Expected {compare_to.edge_features.shape} but received {item.edge_features.shape}"
+            )
 
     def __getitem__(self, item):
         res = self.data[item]
@@ -215,7 +227,8 @@ class StaticGraphDataset:
         self.edge_scaler = None
         self.adjacency_matrix = self._edge_list_to_adj(edge_list)
         self.graphs = graphs
-        self._validate_node_features()
+        self.edge_list = edge_list
+        self._validate_features()
 
     @staticmethod
     def pandas_to_graphs(
@@ -225,7 +238,7 @@ class StaticGraphDataset:
         df_edge_features: pd.DataFrame = None,
         num_edges: int = 0,
         edge_feature_names=None,
-    ):
+    ) -> GraphList:
         edge_feature_names = (
             edge_feature_names
             if not edge_feature_names
@@ -269,20 +282,36 @@ class StaticGraphDataset:
             graph_id += 1
         return graph_list
 
-    def _validate_node_features(self):
+    def _validate_features(self):
         if self.graphs:
             first_graph = self.graphs[0]
-            features = first_graph.node_feature_names
-            feature_shape = first_graph.node_features.shape
+            node_feature_names = first_graph.node_feature_names
+            node_feature_shape = first_graph.node_features.shape
+
+            check_edge_features = False
+            if first_graph.edge_feature_names:
+                edge_feature_names = first_graph.edge_feature_names
+                edge_feature_shape = first_graph.edge_features.shape
+                check_edge_features = True
+
             for graph in self.graphs:
                 if (
-                    features != graph.node_feature_names
-                    or feature_shape != graph.node_features.shape
+                    node_feature_names != graph.node_feature_names
+                    or node_feature_shape != graph.node_features.shape
                 ):
-                    raise KeyError(
+                    raise ValueError(
                         "Invalid list of graphs given. Different node features are present"
                     )
-            self.node_feature_names = features
+                if check_edge_features and (
+                    graph.edge_feature_names != edge_feature_names
+                    or edge_feature_shape != graph.edge_features.shape
+                ):
+                    raise ValueError(
+                        "Invalid list of graphs given. Different edge features are present"
+                    )
+            self.node_feature_names = node_feature_names
+            if first_graph.edge_feature_names:
+                self.edge_feature_names = edge_feature_names
 
     def _edge_list_to_adj(self, edge_list) -> np.ndarray:
         size = len(set([n for e in edge_list for n in e]))
