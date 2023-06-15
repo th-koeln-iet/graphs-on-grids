@@ -49,7 +49,7 @@ class GraphConvolution(GraphLayer):
 
             gather = tf.gather(node_features, self.edges, axis=1)
             node_feature_shape = tf.shape(node_features)
-            reshape = tf.reshape(
+            node_features_expanded = tf.reshape(
                 gather,
                 (
                     node_feature_shape[0],
@@ -57,7 +57,9 @@ class GraphConvolution(GraphLayer):
                     2 * node_feature_shape[2],
                 ),
             )
-            node_node_edge_features = tf.concat([reshape, edge_features], axis=2)
+            node_node_edge_features = self.combine_node_edge_features(
+                edge_features, node_features, node_features_expanded
+            )
 
             edge_weights = self.edge_feature_MLP(node_node_edge_features)
 
@@ -68,9 +70,7 @@ class GraphConvolution(GraphLayer):
             weighted_adj_matrix = tf.tensor_scatter_nd_update(
                 self.adjacency_matrix, self.edges, edge_weights_avg
             )
-            self._A_tilde = tf.math.add(
-                weighted_adj_matrix, tf.eye(self.adjacency_matrix.shape[0])
-            )
+            self._A_tilde = weighted_adj_matrix
         else:
             node_features = inputs
 
