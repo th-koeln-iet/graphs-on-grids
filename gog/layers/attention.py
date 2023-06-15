@@ -34,9 +34,6 @@ class GraphAttention(GraphLayer):
 
         self.edge_feature_indices = self.calculate_edge_feature_indices()
 
-        rows, cols = np.where(self._A_tilde == 1)
-        self.edges = tf.convert_to_tensor(np.column_stack((rows, cols)), dtype=tf.int32)
-
     def build(self, input_shape):
         self.attention_mlp = self.create_attention_mlp()
 
@@ -63,7 +60,7 @@ class GraphAttention(GraphLayer):
         )
 
         if type(inputs) == list:
-            node_states_expanded = self.append_edge_features(
+            node_states_expanded = self.combine_node_edge_features(
                 edge_features, node_features, node_states_expanded
             )
 
@@ -94,68 +91,6 @@ class GraphAttention(GraphLayer):
             output = self.activation(output)
 
         return output
-
-    def append_edge_features(self, edge_features, node_features, node_states_expanded):
-        edge_feature_shape = tf.shape(edge_features)
-        # zero tensor of shape (Batch_size, |E| + |V|, |X_e|)
-        zeros_edge_feature_matrix = tf.zeros(
-            shape=(
-                edge_feature_shape[0],
-                edge_feature_shape[1] + tf.shape(node_features)[1],
-                edge_feature_shape[2],
-            ),
-            dtype=tf.float32,
-        )
-        # computed edge positions in 'zeros_edge_feature_matrix'
-        edge_feature_indices = tf.expand_dims(self.edge_feature_indices, axis=0)
-        # repeated edge positions for batch computation
-        batched_edge_feature_indices = tf.repeat(
-            edge_feature_indices, edge_feature_shape[0], axis=0
-        )
-        # tensor containing batch indices, shape: (1, batch_size * |E|)
-        batch_index_list = tf.expand_dims(
-            tf.repeat(
-                tf.range(edge_feature_shape[0], dtype=tf.int32),
-                tf.shape(edge_feature_indices)[1],
-            ),
-            axis=0,
-        )
-        batch_index_list = tf.reshape(batch_index_list, (edge_feature_shape[0], -1))
-        # reshaped to (batch_size, |E|, 1)
-        batch_index_list = tf.expand_dims(batch_index_list, axis=2)
-        # indices for update operation with shape (batch_size, |E|, 2).
-        # Contains pairs of [batch_number, index_to_update]
-        edge_feature_indices = tf.squeeze(
-            tf.concat([batch_index_list, batched_edge_feature_indices], axis=2)
-        )
-        # batched update of zero tensor with edge features
-        edge_features = tf.tensor_scatter_nd_update(
-            tensor=zeros_edge_feature_matrix,
-            indices=edge_feature_indices,
-            updates=edge_features,
-        )
-        # contains concatenation of neighbor node pair features and corresponding edge features
-        # if a pair contains a self-loop, the edge feature vector is zeroed.
-        # Shape (batch_size, |E| + |V|, 2 * |X_v| + |E|)
-        node_states_expanded = tf.concat([node_states_expanded, edge_features], axis=2)
-        return node_states_expanded
-
-    def calculate_edge_feature_indices(self):
-        """
-        Calculates position of edge features in list of all edges. This is necessary since self-edges are used for
-        attention but cannot contain any edge features.
-        :return: list of edge indices in list containing edges and self-loops
-        """
-        idx_list = []
-        edge_index = 0
-        adj = self._A_tilde.numpy()
-        for i, j in np.ndindex(adj.shape):
-            if i == j and adj[i, j] == 1:
-                edge_index += 1
-            if i != j and adj[i, j] == 1:
-                idx_list.append([edge_index])
-                edge_index += 1
-        return tf.convert_to_tensor(idx_list, dtype=tf.int32)
 
     def create_attention_mlp(self):
         self.attention_mlp_layers = []
