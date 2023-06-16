@@ -2,6 +2,7 @@ import logging
 from typing import List, Tuple
 
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from gog.structure.graph import StaticGraphDataset, GraphList, Graph
@@ -82,17 +83,19 @@ def create_windowed_train_test_split(
     num_instances = len(windows)
     last_train_index = int(num_instances * train_size)
     X_train, X_test, y_train, y_test = (
-        windows[0:last_train_index],
-        windows[last_train_index : num_instances + 1],
-        labels[0:last_train_index],
-        labels[last_train_index : num_instances + 1],
+        windows[0:last_train_index].copy(),
+        windows[last_train_index : num_instances + 1].copy(),
+        labels[0:last_train_index].copy(),
+        labels[last_train_index : num_instances + 1].copy(),
     )
-    return X_train.copy(), X_test.copy(), y_train.copy(), y_test.copy()
+    dataset.set_splits(train=[X_train, y_train], test=[X_test, y_test])
+    return X_train, X_test, y_train, y_test
 
 
 def apply_scaler(
     dataset: StaticGraphDataset, method="zero_mean", target="node"
-) -> Tuple[GraphList, GraphList]:
+) -> Tuple[GraphList, GraphList] | Tuple[GraphList, GraphList, GraphList, GraphList]:
+    is_time_series = False
     if not isinstance(dataset, StaticGraphDataset):
         raise ValueError(
             f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}"
@@ -104,7 +107,36 @@ def apply_scaler(
         )
 
     train, _, test = dataset.get_splits()
-    train, test = train.to_pandas(), test.to_pandas()
+    if isinstance(train, GraphList):
+        train, test = train.to_pandas(), test.to_pandas()
+    else:
+        is_time_series = True
+        X_train, y_train, X_test, y_test = (
+            train[0].to_pandas(),
+            train[1].to_pandas(),
+            test[0].to_pandas(),
+            test[1].to_pandas(),
+        )
+        if target == "node":
+            X_train, y_train, X_test, y_test = (
+                X_train[0],
+                y_train[0],
+                X_test[0],
+                y_test[0],
+            )
+        elif target == "edge":
+            X_train, y_train, X_test, y_test = (
+                X_train[1],
+                y_train[1],
+                X_test[1],
+                y_test[1],
+            )
+        else:
+            raise ValueError(
+                f"Expected target to be either 'node' or 'edge'. Received {target}"
+            )
+        train = pd.concat([X_train, y_train], axis=1)
+        test = pd.concat([X_test, y_test], axis=1)
 
     if isinstance(train, list) and isinstance(test, list):
         if target == "node":
@@ -116,7 +148,7 @@ def apply_scaler(
                 f"Expected target to be either 'node' or 'edge'. Received {target}"
             )
     else:
-        if target == "edge":
+        if target == "edge" and not is_time_series:
             raise ValueError(
                 f"Expected dataset to contain edge features with for target 'edge'"
             )
@@ -145,6 +177,12 @@ def apply_scaler(
         _replace_edge_features(num_edges, dataset.train, train)
         _replace_edge_features(num_edges, dataset.test, test)
 
+    if is_time_series:
+        X_train_scaled = train[:, : X_train.shape[1]]
+        y_train_scaled = train[:, X_train.shape[1] :]
+        X_test_scaled = test[:, : X_test.shape[1]]
+        y_test_scaled = test[:, X_test.shape[1] :]
+        return X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled
     return dataset.train, dataset.test
 
 
