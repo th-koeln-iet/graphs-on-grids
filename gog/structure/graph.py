@@ -338,13 +338,13 @@ class StaticGraphDataset:
             )
         return adj
 
-    def set_train_split(self, train: GraphList):
+    def set_train_split(self, train: GraphList | List[GraphList]):
         self.train = train
 
-    def set_validation_split(self, val: GraphList):
+    def set_validation_split(self, val: GraphList | List[GraphList]):
         self.val = val
 
-    def set_test_split(self, test: GraphList):
+    def set_test_split(self, test: GraphList | List[GraphList]):
         self.test = test
 
     def set_splits(self, train, test, val=None):

@@ -175,6 +175,14 @@ class TestLayersWithEdgeFeatures:
         model = self._create_multi_input_model(gog.GraphBase, adj, embedding_size)
         self._execute_layer_test(model)
 
+    def test_asymmetric_adjacency_matrix(self):
+        adj = self.dataset.adjacency_matrix.copy()
+        adj[2, 1] = -1
+        embedding_size = self.n_features * 3
+        with pytest.raises(ValueError) as err:
+            self._create_multi_input_model(gog.GraphBase, adj, embedding_size)
+        assert "Expected symmetric adjacency matrix" in str(err.value)
+
     def test_wrong_embedding_size(self):
         adj = self.dataset.adjacency_matrix
         gog.GraphLayer(adj, 4)
@@ -187,6 +195,8 @@ class TestLayersWithEdgeFeatures:
         adj = self.dataset.adjacency_matrix
         gog.GraphLayer(adj, 4, hidden_units_node=[4, 3])
         gog.GraphLayer(adj, 4, hidden_units_edge=[4, 3])
+
+        # definition as tuple or list possible
         gog.GraphLayer(adj, 4, hidden_units_node=(4, 3))
         gog.GraphLayer(adj, 4, hidden_units_edge=(4, 3))
         with pytest.raises(ValueError):
