@@ -57,6 +57,24 @@ class TestLayers:
         )
         self._execute_layer_test(model)
 
+    def test_graph_base_with_flattened_output_layer(self):
+        adj = self.dataset.adjacency_matrix
+        embedding_size = self.n_features * 3
+        model = tf.keras.models.Sequential(
+            [
+                keras.layers.Input((self.n_nodes, self.n_features)),
+                gog.layers.GraphBase(adj, embedding_size),
+                keras.layers.BatchNormalization(),
+                keras.layers.ReLU(),
+                gog.layers.GraphBase(adj, embedding_size),
+                keras.layers.BatchNormalization(),
+                keras.layers.ReLU(),
+                gog.layers.FlattenedDenseOutput(self.n_features),
+            ]
+        )
+        print(model.summary())
+        self._execute_layer_test(model)
+
     def test_graph_base_with_mlp(self):
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 3
@@ -126,7 +144,8 @@ class TestLayers:
         self._execute_layer_test(model)
 
     def _execute_layer_test(self, model):
-        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
+        model.compile(optimizer=self.optimizer, loss=self.loss_fn, run_eagerly=True)
+        print(model.summary())
         model.fit(
             self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
         )
