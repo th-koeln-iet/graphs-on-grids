@@ -3,7 +3,17 @@ from tensorflow import keras
 
 
 class FlattenedDenseOutput(keras.layers.Layer):
-    def __init__(self, units, activation=None):
+    """
+    A utility output layer that takes in a 2D feature matrix and flattens it before passing it through a regular
+    dense layer. The output feature matrix is reshaped to be 2D again.
+    """
+
+    def __init__(self, units: int, activation: str = None) -> None:
+        """
+
+        :param units: dimensionality of the output node feature vector
+        :param activation: activation function used in dense layer
+        """
         super().__init__()
         self.units = units
         self.activation = keras.activations.get(activation)

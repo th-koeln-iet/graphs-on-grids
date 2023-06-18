@@ -6,19 +6,48 @@ from gog.layers.graph_layer import GraphLayer
 
 
 class GraphAttention(GraphLayer):
+    r"""
+    Graph attention layer as shown in the [original paper](https://arxiv.org/pdf/1710.10903.pdf)
+
+    $$
+        \textbf{H}^{(t+1)} = \sigma \biggl( \tilde{A_\alpha} H^{(t)}W^{(t)}\biggr)
+    $$ where \( \tilde{A_\alpha} \) is the adjacency matrix weighted by the attention scores \(\alpha\)
+    and \(\alpha\) is computed by:
+    $$
+        \mathbf{\alpha}_{ij} =\frac{ \exp\left(\mathrm{LeakyReLU}\left(
+        a^{\top} [(XW)_i \, \| \, (XW)_j]\right)\right)}{\sum\limits_{k
+        \in \mathcal{N}(i) \cup \{ i \}} \exp\left(\mathrm{LeakyReLU}\left(
+        a^{\top} [(XW)_i \, \| \, (XW)_k]\right)\right)}
+    $$ for each node pair \((i,j)\) where \(a \in \mathbb{R}^{2F'}\) is a trainable attention kernel.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_attention=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_attention: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
+        computing attention scores
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphAttention, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
@@ -107,21 +136,44 @@ class GraphAttention(GraphLayer):
 
 
 class MultiHeadGraphAttention(keras.layers.Layer):
+    r"""
+    Multi-head graph attention layer as shown in the [original paper](https://arxiv.org/pdf/1710.10903.pdf)
+
+    Computes `num_heads` independent graph attention layers and combines them by concatenation or averaging
+    depending on the `concat_heads` parameter.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_attention=None,
-        dropout_rate=0,
-        num_heads=3,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
-        concat_heads=True,
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_attention: list | tuple = None,
+        dropout_rate: int | float = 0,
+        num_heads: int = 3,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
+        concat_heads: bool = True,
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
+        computing attention scores
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param num_heads: Number of independent attention heads
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        :param concat_heads: Whether to concatenate (True) results from the attention heads or average (False) them.
+        """
         super(MultiHeadGraphAttention, self).__init__()
         self.concat_heads = concat_heads
         self.num_heads = num_heads

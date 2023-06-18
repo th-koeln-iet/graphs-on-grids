@@ -5,19 +5,42 @@ from gog.layers.graph_layer import GraphLayer
 
 
 class GraphConvolution(GraphLayer):
+    r"""
+    Graph convolution layer as shown in the [original paper](http://arxiv.org/abs/1609.02907)
+
+    $$
+        \textbf{H}^{(t+1)} = \sigma \biggl( \tilde{D}^{-{1\over2}}\tilde{A}\tilde{D}^{-{1\over2}} H^{(t)}W^{(t)}\biggr)
+    $$ where where \( \hat{A} = A + I \) is the adjacency matrix with added self-loops
+    and \( \tilde{D} \) is its degree matrix.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphConvolution, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,

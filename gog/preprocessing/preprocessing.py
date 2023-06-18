@@ -10,7 +10,16 @@ from gog.structure.graph import StaticGraphDataset, GraphList, Graph
 
 def create_train_test_split(
     dataset: StaticGraphDataset, train_size=0.8, random_state=None, shuffle=True
-):
+) -> Tuple[GraphList, GraphList]:
+    r"""Create a train-test-split from an instance of `gog.structure.graph.StaticGraphDataset()`
+
+    :param dataset: Dataset to be split
+    :param train_size: Relative size of the training set as a  value between 0 and 1. The test set will contain
+     \( 1 - train\_size \) percent of the instances
+    :param random_state: Sets the random state for shuffling
+    :param shuffle: Whether to shuffle the data before splitting.
+    :return: Tuple of `gog.structure.graph.GraphList()` instances containing the train and test set
+    """
     if not isinstance(dataset, StaticGraphDataset):
         raise ValueError(
             f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}"
@@ -30,16 +39,31 @@ def create_train_test_split(
     return train, test
 
 
-def create_windowed_train_test_split(
+def create_train_test_split_windowed(
     dataset: StaticGraphDataset,
-    window_size,
-    len_labels=1,
-    step=1,
-    start=0,
-    train_size=0.8,
-    random_state=None,
-    shuffle=False,
-):
+    window_size: int,
+    len_labels: int = 1,
+    step: int = 1,
+    start: int = 0,
+    train_size: float = 0.8,
+    random_state: int = None,
+    shuffle: bool = False,
+) -> Tuple[GraphList, GraphList, GraphList, GraphList]:
+    r"""Creates a windowed dataset from the provided `StaticGraphDataset`instance. After that, a train-test-split
+    is created from the windowed data
+
+    :param dataset: Dataset to be windowed and split
+    :param window_size: Sequence length of to be provided as input to the model
+    :param len_labels: The output sequence length to be predicted by the model
+    :param step:  Step size of the windowing algorithm. Describes how much the window start is shifted after creating a
+     window instance. If set to `window_size`, each graph in the dataset is only used for a single instance.
+    :param start: Start index for windowing
+    :param train_size: Relative size of the training set as a  value between 0 and 1. The test set will contain
+    \( 1 - train\_size \) percent of the instances
+    :param random_state: Sets the random state for shuffling
+    :param shuffle: Whether to shuffle the data before splitting.
+    :return: Tuple of `gog.structure.graph.GraphList()` instances containing the train and test instances and labels
+    """
     if not isinstance(dataset, StaticGraphDataset):
         raise ValueError(
             f"Expected input to be of type {StaticGraphDataset.type()}. Received type {type(dataset)}"
@@ -93,8 +117,26 @@ def create_windowed_train_test_split(
 
 
 def apply_scaler(
-    dataset: StaticGraphDataset, method="zero_mean", target="node"
+    dataset: StaticGraphDataset, method: str = "zero_mean", target: str = "node"
 ) -> Tuple[GraphList, GraphList] | Tuple[GraphList, GraphList, GraphList, GraphList]:
+    """Applies the selected scaling method to the provided dataset. After scaling, the used scaler instance is
+    accessible through the `StaticGraphDataset` instance as either `node_scaler` or `edge_scaler` depending on the
+     given scaling target.
+
+     The dataset needs to be split with either of the `create_train_test_split`-methods in order to correctly apply
+     scaling. (Fitting only on training data and applying to training and test data)
+
+     Scaling is applied to both the inputs and labels and done per feature. For time-series data, this means that
+     each feature of every graph in the input sequence is scaled independently to avoid weighting repetitions in the
+     sequence too much.
+
+    :param dataset: Dataset to be scaled
+    :param method: Scaling method to be applied. Either `zero_mean` or `min_max`
+    :param target: Either `node` or `edge`. Selects whether to scale the node features of each graph or the edge
+    features (if they are present)
+    :return: Either a 4-tuple of scaled data if the dataset consists of time-series data. Else a 2-tuple of the scaled
+     train and test data.
+    """
     is_time_series = False
     if not isinstance(dataset, StaticGraphDataset):
         raise ValueError(
@@ -225,19 +267,30 @@ def mask_labels(
     X_train: GraphList,
     X_test: GraphList,
     targets: List[str],
-    nodes: List | np.ndarray,
+    node_indices: List | np.ndarray,
     method: str = "zeros",
-):
+) -> Tuple[GraphList, GraphList]:
+    """Masks selected features of nodes at the provided indices by either a set or random value.
+
+    :param X_train: Training set
+    :param X_test: Test set
+    :param targets: Which node features to mask
+    :param node_indices: Which nodes to apply the feature masking to
+    :param method: Either `zeros`, `ones` or `random`
+    :return: A pair of the masked train and test split
+    """
     if not isinstance(X_train, GraphList) or not isinstance(X_test, GraphList):
         raise ValueError(
             f"Expected both inputs for X_train and X_test to be of type {type(GraphList)}. Received types {type(X_train), type(X_test)}"
         )
 
-    feature_indices = _get_feature_indices(X_train, X_test, targets, len(nodes))
+    feature_indices = _get_feature_indices(X_train, X_test, targets, len(node_indices))
 
     X_train_mask = GraphList(
         [
-            _mask_split(graph.__copy__(), targets, nodes, method, feature_indices)
+            _mask_split(
+                graph.__copy__(), targets, node_indices, method, feature_indices
+            )
             for graph in X_train
         ],
         X_train.num_nodes,
@@ -248,7 +301,9 @@ def mask_labels(
     )
     X_test_mask = GraphList(
         [
-            _mask_split(graph.__copy__(), targets, nodes, method, feature_indices)
+            _mask_split(
+                graph.__copy__(), targets, node_indices, method, feature_indices
+            )
             for graph in X_test
         ],
         num_nodes=X_test.num_nodes,
@@ -274,6 +329,10 @@ def _mask_split(
 
     if method == "zeros":
         feature_matrix[nodes, feature_indices] = 0
+    elif method == "ones":
+        feature_matrix[nodes, feature_indices] = 1
+    elif method == "random":
+        raise NotImplemented(f"Random masking is not yet supported.")
 
     return graph
 
@@ -302,8 +361,16 @@ def _mask_split_dynamic(
 
 
 def create_validation_set(
-    X: GraphList, y: GraphList, validation_size=0.2
+    X: GraphList, y: GraphList, validation_size: float = 0.2
 ) -> Tuple[GraphList, GraphList, GraphList, GraphList]:
+    r"""Creates a validation set from provided data.
+
+    :param X: Training data to be split
+    :param y: Labels of training data to be split
+    :param validation_size: Relative size of validation set. The training set will be of size \( 1 - validation\_size \)
+     percent of the original training set.
+    :return: A 4-Tuple of the training and validation set inputs and targets.
+    """
     if not isinstance(X, GraphList) or not isinstance(y, GraphList):
         raise ValueError(
             f"Expected both inputs for X and y to be of type {type(GraphList())}. Received types {type(X), type(y)}"

@@ -1,6 +1,6 @@
 import pytest
 
-from gog import create_windowed_train_test_split
+from gog import create_train_test_split_windowed
 from test.testUtils import (
     create_graph_dataset,
     create_test_graph,
@@ -126,7 +126,7 @@ class TestGraphsTimeSeries:
             _,
             _,
             _,
-        ) = create_windowed_train_test_split(
+        ) = create_train_test_split_windowed(
             cls.dataset_node, window_size=cls.window_size, len_labels=cls.len_labels
         )
         (
@@ -134,7 +134,7 @@ class TestGraphsTimeSeries:
             _,
             _,
             _,
-        ) = create_windowed_train_test_split(
+        ) = create_train_test_split_windowed(
             cls.dataset_node_edge,
             window_size=cls.window_size,
             len_labels=cls.len_labels,

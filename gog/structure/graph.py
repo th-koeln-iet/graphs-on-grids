@@ -7,14 +7,26 @@ from tqdm import tqdm
 
 
 class Graph:
+    """
+    Basic container class for graph data
+    """
+
     def __init__(
         self,
-        ID,
-        node_features,
-        node_feature_names,
-        edge_features=None,
-        edge_feature_names=None,
-    ):
+        ID: int,
+        node_features: np.ndarray,
+        node_feature_names: list,
+        edge_features: np.ndarray = None,
+        edge_feature_names: list = None,
+    ) -> None:
+        """
+
+        :param ID: Identifier of graph
+        :param node_features: node feature matrix of graph instance
+        :param node_feature_names: node feature names
+        :param edge_features: edge feature matrix of graph instance
+        :param edge_feature_names: edge feature names
+        """
         self.ID = ID
         self.edge_features = None
         self.edge_feature_names: List = edge_feature_names
@@ -26,9 +38,8 @@ class Graph:
             edge_features, edge_feature_names
         ) if edge_features is not None else None
 
-    @staticmethod
     def _set_node_features(
-        node_features: pd.DataFrame | np.ndarray, node_feature_names: List[str]
+        self, node_features: pd.DataFrame | np.ndarray, node_feature_names: List[str]
     ) -> np.ndarray:
         if type(node_features) == np.ndarray:
             return node_features
@@ -63,15 +74,30 @@ class Graph:
 
 
 class GraphList(UserList):
+    """
+    Wrapper class for lists of `gog.structure.Graph` instances. Includes methods to convert to numpy arrays
+    or pandas dataframes. GraphLists include validation for Graphs that are appended to it including checks for
+    equal features and node/edge dimensions. Otherwise, behaves like regular python lists.
+    """
+
     def __init__(
         self,
-        data=None,
+        data: Graph | list = None,
         num_nodes: int = 0,
         node_feature_names: List[str] = None,
         num_edges: int = 0,
         edge_feature_names: List[str] = None,
-        strict_checks=True,
-    ):
+        strict_checks: bool = True,
+    ) -> None:
+        """
+
+        :param data: GraphList data
+        :param num_nodes: number of nodes in graphs
+        :param node_feature_names: node feature names used in graphs
+        :param num_edges: number of edges in graphs
+        :param edge_feature_names: edge feature names used in graphs
+        :param strict_checks: whether to perform validation on appended graphs
+        """
         super().__init__(data)
         self.node_feature_names: List[str] = node_feature_names
         self.num_nodes: int = num_nodes
@@ -152,7 +178,21 @@ class GraphList(UserList):
             strict_checks=self.strict_checks,
         )
 
-    def to_numpy(self):
+    def to_numpy(self) -> List[np.ndarray] | np.ndarray:
+        """
+        Converts `GraphList` instance to
+
+            - ndarray of shape (n_graphs, n_nodes, n_node_features) if graphs only include node features and are
+              not windowed
+            - list of ndarrays of shapes (n_graphs, n_nodes, n_node_features) and (n_graphs, n_edges, n_edge_features).
+              Index 0 of the list contains the node features, index 1 contains the edge features
+            - nparray of shape (n_graphs, window_size, n_nodes, n_node_features) if graphs only include node features
+              and graphs are windowed
+            - list of ndarrays of shapes (n_graphs, window_size, n_nodes, n_node_features) and
+              (n_graphs, window_size, n_edges, n_edge_features). Index 0 of the list contains the node features,
+              index 1 contains the edge features
+        :return: either ndarray of the node features or list of ndarrays containing node and edge features
+        """
         if not self.strict_checks:
             return self._to_numpy_dynamic()
         if self.edge_feature_names:
@@ -205,6 +245,23 @@ class GraphList(UserList):
         return pd.DataFrame(np.hstack(np.hstack(to_numpy)), columns=columns)
 
     def to_pandas(self):
+        """
+        Converts `GraphList` instance to
+
+            - `pd.DataFrame` of shape (n_graphs * n_nodes, n_node_features) if graphs only include node features and are
+              not windowed.
+            - list of `pd.DataFrame`s of shapes (n_graphs * n_nodes, n_node_features) and (n_graphs * n_edges,
+              n_edge_features).
+              Index 0 of the list contains the node features, index 1 contains the edge features
+            - `pd.DataFrame` of shape (n_graphs * n_nodes, window_size * n_node_features) if graphs only include node
+              features and graphs are windowed. In this case, features are indexed by their position in the sequence and
+              represented as extra columns.
+            - list of `pd.DataFrame`s of shapes (n_graphs * n_nodes, window_size * n_node_features) and
+              (n_graphs * n_edges,  window_size * n_edge_features). Index 0 of the list contains the node features,
+              index 1 contains the edge features. In this case, features are indexed by their position in the sequence
+              and represented as extra columns.
+        :return: either `pd.DataFrame` of the node features or list of `pd.DataFrames` containing node and edge features
+        """
         if not self.strict_checks:
             return self._to_pandas_dynamic()
         if self.edge_feature_names:
@@ -219,7 +276,19 @@ class GraphList(UserList):
 
 
 class StaticGraphDataset:
+    """
+    Main container to store graph datasets for graphs with fixed dimensions and feature dimension for the whole dataset.
+    Additionally, works together with the provided preprocessing methods in `preprocessing.py` to simplify the data
+    preparation process.
+    """
+
     def __init__(self, edge_list, graphs: GraphList):
+        """
+        Initializes and validates provided graph data
+        :param edge_list: A list of node pairs. The list must include both directions for each edge.
+        :param graphs: A `GraphList` instance of all graphs in the dataset. This list should be created with the static
+        method `pandas_to_graphs()`.
+        """
         self.test = None
         self.val = None
         self.train = None
@@ -237,8 +306,26 @@ class StaticGraphDataset:
         node_feature_names: List[str],
         df_edge_features: pd.DataFrame = None,
         num_edges: int = 0,
-        edge_feature_names=None,
+        edge_feature_names: List[str] = None,
     ) -> GraphList:
+        """
+        Converts a tabular dataset from a `pd.DataFrame` to a `GraphList` that can be used to initialize an instance of
+        `StaticGraphDataset`
+        :param df_node_features: `pd.DataFrame` containing node feature data. This function expects all graphs to follow
+        the same node order and graphs to be adjacent to each other within the table.<br>
+
+        **Example**: Each graph contains 40 nodes and there are 100 graphs present. This means that the DataFrame must
+        contain 4000 rows, where graph 0 starts at index 0 and ends at index 39, graph 1 starts at index 40 and ends at
+        index 79, etc. The nodes for each graph are in the same order, e.g. starting at 0 and ending at 39. Other orders
+        are possible but need to be consistent across the dataset.
+        :param num_nodes: The number of nodes for graphs in the dataset
+        :param node_feature_names: The node features to extract from df_node_features.
+        :param df_edge_features: Same as df_node_features but for edge features. Only needed if edge features are
+        present in the graphs
+        :param num_edges: The number of edges for graphs in the dataset
+        :param edge_feature_names: The edge features to extract from the df_edge_features
+        :return: A `GraphList` instance that contains `Graph`-objects containing all relevant data.
+        """
         edge_feature_names = (
             edge_feature_names
             if not edge_feature_names
