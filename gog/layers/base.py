@@ -1,3 +1,5 @@
+import inspect
+
 import numpy as np
 import tensorflow as tf
 
@@ -5,20 +7,42 @@ from gog.layers.graph_layer import GraphLayer
 
 
 class GraphBase(GraphLayer):
+    r"""
+    Standard GNN layer. Implements
+    $$
+        \textbf{H}^{(t+1)} = \sigma ((A+I)H^{(t)}W^{(t)})
+    $$
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        aggregation_method="sum",
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        aggregation_method: str = "sum",
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param aggregation_method: Chooses the aggregation method for message passing. Either "sum" or "mean".
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphBase, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,

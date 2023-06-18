@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from gog import create_windowed_train_test_split
+from gog import create_train_test_split_windowed
 from gog.preprocessing import (
     create_train_test_split,
     mask_labels,
@@ -199,7 +199,7 @@ class TestPreprocessingTimeSeries:
     def test_create_train_test_split(self):
         window_size = 5
         len_labels = 1
-        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+        X_train, X_test, y_train, y_test = create_train_test_split_windowed(
             self.dataset, window_size=window_size, len_labels=len_labels
         )
         expected_test_len = 0.2 * self.n_graphs - 1
@@ -214,7 +214,7 @@ class TestPreprocessingTimeSeries:
     def test_apply_scaler_node(self):
         window_size = 5
         len_labels = 1
-        create_windowed_train_test_split(
+        create_train_test_split_windowed(
             self.dataset, window_size=window_size, len_labels=len_labels
         )
         X_train, X_test, y_train, y_test = apply_scaler(self.dataset)
@@ -239,7 +239,7 @@ class TestPreprocessingTimeSeries:
     def test_apply_scaler_edge(self):
         window_size = 5
         len_labels = 1
-        create_windowed_train_test_split(
+        create_train_test_split_windowed(
             self.dataset, window_size=window_size, len_labels=len_labels
         )
         X_train, X_test, y_train, y_test = apply_scaler(self.dataset, target="edge")
@@ -264,7 +264,7 @@ class TestPreprocessingTimeSeries:
     def test_mask_labels(self):
         window_size = 5
         len_labels = 3
-        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+        X_train, X_test, y_train, y_test = create_train_test_split_windowed(
             self.dataset, window_size=window_size, len_labels=len_labels
         )
         train_len = len(X_train)

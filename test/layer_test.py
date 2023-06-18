@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 import gog
-from gog import create_windowed_train_test_split
+from gog import create_train_test_split_windowed
 from gog.preprocessing import create_train_test_split, mask_labels
 from test.testUtils import create_graph_dataset
 
@@ -359,7 +359,7 @@ class TestTemporalLayers:
         cls.window_size = 5
         cls.len_labels = 3
 
-        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+        X_train, X_test, y_train, y_test = create_train_test_split_windowed(
             cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
         )
         masked_train, masked_test = mask_labels(
@@ -663,7 +663,7 @@ class TestTemporalLayersWithEdgeFeatures:
         cls.window_size = 5
         cls.len_labels = 3
 
-        X_train, X_test, y_train, y_test = create_windowed_train_test_split(
+        X_train, X_test, y_train, y_test = create_train_test_split_windowed(
             cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
         )
         masked_train, masked_test = mask_labels(

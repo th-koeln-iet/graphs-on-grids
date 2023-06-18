@@ -2,6 +2,12 @@ import numpy as np
 
 
 def mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    """Calculates the mean squared error (MSE) based on the average MSE on all nodes
+
+    :param y_true: Correct target values
+    :param y_pred: Predicted target values
+    :return: MSE for each node feature averaged over all nodes and instances
+    """
     if y_true.shape != y_pred.shape:
         raise ValueError(
             f"Invalid dimensions between y_true and y_pred. Got shapes {y_true.shape} and {y_pred.shape}"
@@ -21,6 +27,12 @@ def mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
 
 
 def root_mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    """Calculates the root mean squared error (RMSE) based on the average RMSE on all nodes
+
+    :param y_true: Correct target values
+    :param y_pred: Predicted target values
+    :return: RMSE for each node feature averaged over all nodes and instances
+    """
     if y_true.shape != y_pred.shape:
         raise ValueError(
             f"Invalid dimensions between y_true and y_pred. Got shapes {y_true.shape} and {y_pred.shape}"
@@ -40,6 +52,12 @@ def root_mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarra
 
 
 def mean_absolute_error(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    """Calculates the mean absolute error (MAE) based on the average MAE on all nodes
+
+    :param y_true: Correct target values
+    :param y_pred: Predicted target values
+    :return: MAE for each node feature averaged over all nodes and instances
+    """
     if y_true.shape != y_pred.shape:
         raise ValueError(
             f"Invalid dimensions between y_true and y_pred. Got shapes {y_true.shape} and {y_pred.shape}"

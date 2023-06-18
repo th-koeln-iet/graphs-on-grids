@@ -1,0 +1,1 @@
+::: gog.structure.graph
