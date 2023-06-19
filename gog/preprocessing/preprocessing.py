@@ -326,13 +326,15 @@ def _mask_split(
     if isinstance(graph, GraphList):
         return _mask_split_dynamic(graph, targets, nodes, method, feature_indices)
     feature_matrix = graph.node_features
-
+    feature_matrix_shape = feature_matrix[nodes, feature_indices].shape
     if method == "zeros":
         feature_matrix[nodes, feature_indices] = 0
     elif method == "ones":
         feature_matrix[nodes, feature_indices] = 1
     elif method == "random":
-        raise NotImplemented(f"Random masking is not yet supported.")
+        graph.node_features = graph.node_features.astype(np.float)
+        random_vals = np.random.rand(feature_matrix_shape[0], feature_matrix_shape[1])
+        graph.node_features[nodes, feature_indices] = random_vals
 
     return graph
 

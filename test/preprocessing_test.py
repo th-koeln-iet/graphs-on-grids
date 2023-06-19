@@ -52,13 +52,13 @@ class TestPreprocessing:
         for graph in train_masked:
             masked_nodes = graph.node_features[nodes_to_mask]
             for node in masked_nodes:
-                assert node[0] == 0 and node[1] == 0
+                assert node[0] == 0.0 and node[1] == 0.0
 
         # original feature matrix is unaffected
         for graph in train:
             masked_nodes = graph.node_features[nodes_to_mask]
             for node in masked_nodes:
-                assert node[0] != 0 and node[1] != 0
+                assert node[0] != 0.0 and node[1] != 0.0
 
     def test_mask_labels_wrong_input(self):
         train, test = [], []
@@ -282,14 +282,14 @@ class TestPreprocessingTimeSeries:
             for graph in graph_sequence:
                 masked_nodes = graph.node_features[nodes_to_mask]
                 for node in masked_nodes:
-                    assert node[0] == 0 and node[1] == 0
+                    assert node[0] == 0.0 and node[1] == 0.0
 
         # original feature matrix is unaffected
         for graph_sequence in y_train:
             for graph in graph_sequence:
                 masked_nodes = graph.node_features[nodes_to_mask]
                 for node in masked_nodes:
-                    assert node[0] != 0 and node[1] != 0
+                    assert node[0] != 0.0 and node[1] != 0.0
 
     def test_create_validation_set(self):
         graphs = self.dataset.graphs
