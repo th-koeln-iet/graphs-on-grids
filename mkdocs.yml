@@ -27,4 +27,3 @@ extra_javascript:
 
 markdown_extensions:
   - mdx_math
-  - markdown_katex
