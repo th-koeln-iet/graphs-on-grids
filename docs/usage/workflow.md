@@ -171,7 +171,7 @@ model.compile(optimizer=optimizer, loss=loss_fn)
 # optionally print the model summary
 print(model.summary())
 
-history = model.fit(X_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE)
+history = model.fit(X_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(X_val, y_val))
 ```
 
 ## Testing the model
