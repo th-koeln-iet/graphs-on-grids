@@ -10,6 +10,11 @@ from gog.layers.temporal.temporal_layer import (
 
 
 class GraphConvTemporalConv(TemporalConv):
+    """
+    Implementation of a `TemporalConv` layer using a `GraphConvolution` layer as graph layer.
+    See the [documentation](/usage/temporal_layers) on how temporal layers work.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -24,6 +29,21 @@ class GraphConvTemporalConv(TemporalConv):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param output_seq_len: number of graphs in the output sequence
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphConvTemporalConv, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
@@ -55,6 +75,11 @@ class GraphConvTemporalConv(TemporalConv):
 
 
 class GraphConvolutionLSTM(GraphLSTM):
+    """
+    Implementation of a `GraphLSTM` layer using a `GraphConvolution` layer as graph layer.
+    See the [documentation](/usage/temporal_layers) on how temporal layers work.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -69,6 +94,21 @@ class GraphConvolutionLSTM(GraphLSTM):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param output_seq_len: number of graphs in the output sequence
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphConvolutionLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
@@ -100,6 +140,11 @@ class GraphConvolutionLSTM(GraphLSTM):
 
 
 class GraphConvolutionGRU(GraphGRU):
+    """
+    Implementation of a `GraphGRU` layer using a `GraphConvolution` layer as graph layer.
+    See the [documentation](/usage/temporal_layers) on how temporal layers work.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -114,6 +159,21 @@ class GraphConvolutionGRU(GraphGRU):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param output_seq_len: number of graphs in the output sequence
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphConvolutionGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
@@ -145,6 +205,11 @@ class GraphConvolutionGRU(GraphGRU):
 
 
 class GraphConvolutionConvLSTM(GraphConvLSTM):
+    """
+    Implementation of a `GraphConvLSTM` layer using a `GraphConvolution` layer as graph layer.
+    See the [documentation](/usage/temporal_layers) on how temporal layers work.
+    """
+
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
@@ -159,6 +224,21 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
         weight_regularizer=None,
         bias_initializer="zeros",
     ):
+        """
+        :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
+        :param embedding_size: the output dimensionality of the node feature vector
+        :param output_seq_len: number of graphs in the output sequence
+        :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        node features
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
+        :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
+        :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
+        :param activation: Activation function to be used within the layer
+        :param weight_initializer: Weight initializer to be used within the layer
+        :param weight_regularizer: Weight regularizer to be used within the layer
+        :param bias_initializer: Bias initializer to be used within the layer
+        """
         super(GraphConvolutionConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
