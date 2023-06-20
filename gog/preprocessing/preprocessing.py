@@ -263,7 +263,7 @@ def _get_feature_indices(
     return feature_indices
 
 
-def mask_labels(
+def mask_features(
     X_train: GraphList,
     X_test: GraphList,
     targets: List[str],

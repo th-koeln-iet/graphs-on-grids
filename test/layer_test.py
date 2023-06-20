@@ -5,7 +5,7 @@ from tensorflow import keras
 
 import gog
 from gog import create_train_test_split_windowed
-from gog.preprocessing import create_train_test_split, mask_labels
+from gog.preprocessing import create_train_test_split, mask_features
 from test.testUtils import create_graph_dataset
 
 
@@ -23,7 +23,7 @@ class TestLayers:
         )
         cls.feature_names = cls.dataset.node_feature_names
         train, test = create_train_test_split(cls.dataset, shuffle=False)
-        masked_train, masked_test = mask_labels(
+        masked_train, masked_test = mask_features(
             train, test, cls.dataset.node_feature_names, np.arange(0, cls.n_nodes // 2)
         )
         cls.X_train = masked_train.to_numpy()
@@ -171,7 +171,7 @@ class TestLayersWithEdgeFeatures:
         cls.n_edges = cls.dataset.graphs.num_edges
         cls.feature_names = cls.dataset.node_feature_names
         train, test = create_train_test_split(cls.dataset, shuffle=False)
-        masked_train, masked_test = mask_labels(
+        masked_train, masked_test = mask_features(
             train, test, cls.dataset.node_feature_names, np.arange(0, cls.n_nodes // 2)
         )
         cls.X_train = masked_train.to_numpy()
@@ -362,7 +362,7 @@ class TestTemporalLayers:
         X_train, X_test, y_train, y_test = create_train_test_split_windowed(
             cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
         )
-        masked_train, masked_test = mask_labels(
+        masked_train, masked_test = mask_features(
             X_train,
             X_test,
             cls.dataset.node_feature_names,
@@ -666,7 +666,7 @@ class TestTemporalLayersWithEdgeFeatures:
         X_train, X_test, y_train, y_test = create_train_test_split_windowed(
             cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
         )
-        masked_train, masked_test = mask_labels(
+        masked_train, masked_test = mask_features(
             X_train,
             X_test,
             cls.dataset.node_feature_names,

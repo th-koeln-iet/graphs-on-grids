@@ -3,7 +3,18 @@ from tensorflow import keras
 
 
 class ConvOutputBlock(keras.layers.Layer):
-    def __init__(self, output_seq_len, units, activation=None):
+    """
+    Convolutional output layer to be used with implementations of the `TemporalConv` layers.
+    A 2D-Convolution is applied to create graphs according to the parameter `output_seq_len`. At the output,
+    a dense layer adjusts the graphs to the embedding size given by the `units` parameter.
+    """
+
+    def __init__(self, output_seq_len: int, units: int, activation: str = None) -> None:
+        """
+        :param output_seq_len: number of graphs in the output sequence
+        :param units: embedding size of the output graph(s)
+        :param activation: activation function of the dense output layer
+        """
         super(ConvOutputBlock, self).__init__()
         self.output_seq_len = output_seq_len
         self.units = units
@@ -28,7 +39,18 @@ class ConvOutputBlock(keras.layers.Layer):
 
 
 class RecurrentOutputBlock(keras.layers.Layer):
-    def __init__(self, output_seq_len, units, activation=None):
+    """
+    Recurrent output layer to be used with implementations of the `GraphLSTM`, `GraphGRU` and `GraphConvLSTM` layers.
+    The last output of the last temporal layer is taken and passed through a dense layer with `units` * `output_seq_len`
+    neurons. The output is then reshaped to generate `output_seq_len` graphs with embedding size `units`.
+    """
+
+    def __init__(self, output_seq_len: int, units: int, activation: str = None) -> None:
+        """
+        :param output_seq_len: number of graphs in the output sequence
+        :param units: embedding size of the output graph(s)
+        :param activation: activation function of the dense output layer
+        """
         super(RecurrentOutputBlock, self).__init__()
         self.output_seq_len = output_seq_len
         self.units = units

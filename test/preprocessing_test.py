@@ -4,7 +4,7 @@ import pytest
 from gog import create_train_test_split_windowed
 from gog.preprocessing import (
     create_train_test_split,
-    mask_labels,
+    mask_features,
     create_validation_set,
     apply_scaler,
 )
@@ -42,7 +42,7 @@ class TestPreprocessing:
         train, test = create_train_test_split(self.dataset)
         targets = self.feature_names
         nodes_to_mask = [1, 2, 3]
-        train_masked, test_masked = mask_labels(train, test, targets, nodes_to_mask)
+        train_masked, test_masked = mask_features(train, test, targets, nodes_to_mask)
 
         # assert correct length
         assert len(train_masked) == 4
@@ -66,7 +66,7 @@ class TestPreprocessing:
         nodes_to_mask = [1, 2]
 
         with pytest.raises(ValueError):
-            mask_labels(train, test, targets, nodes_to_mask)
+            mask_features(train, test, targets, nodes_to_mask)
 
     def test_create_validation_set(self):
         graphs = self.dataset.graphs
@@ -271,7 +271,9 @@ class TestPreprocessingTimeSeries:
         test_len = len(X_test)
         targets = self.feature_names
         nodes_to_mask = [1, 2, 3]
-        train_masked, test_masked = mask_labels(X_train, X_test, targets, nodes_to_mask)
+        train_masked, test_masked = mask_features(
+            X_train, X_test, targets, nodes_to_mask
+        )
 
         # assert correct length
         assert len(train_masked) == train_len
