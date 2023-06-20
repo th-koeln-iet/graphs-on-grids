@@ -1,17 +1,10 @@
-# Welcome to MkDocs
+# Welcome to Graphs on Grids
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+**Graphs on Grids** is a high-level framework for working with graph data based on Tensorflow 2.
+It mainly provides specialized layers for graph data but also enables an easy workflow using its preprocessing pipeline.
 
-## Commands
+For more information on the usage, check the provided [workflow guide](/usage/workflow).
+Additionally, you can find documentation on the different layer types under the _layers_ section.
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+The framework mainly focuses on node-level tasks such as node regression or classification. For this, the framework 
+provides tools to model standard as well as graph time-series problems.
