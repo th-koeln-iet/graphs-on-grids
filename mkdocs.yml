@@ -32,3 +32,5 @@ extra_javascript:
 
 markdown_extensions:
   - mdx_math
+  - toc:
+      permalink: "#"

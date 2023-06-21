@@ -17,9 +17,9 @@ Temporal layers can be either of the following TF/Keras layers:
 
 Graph layers can be either of:
 
-- [GraphBase](/layers/static_layers#gog.layers.base.GraphBase)
-- [GraphConvolution](/layers/static_layers#gog.layers.conv.GraphConvolution)
-- [GraphAttention](/layers/static_layers#gog.layers.attention.GraphAttention)
+- [GraphBase](../../layers/static_layers#gog.layers.base.GraphBase)
+- [GraphConvolution](../../layers/static_layers#gog.layers.conv.GraphConvolution)
+- [GraphAttention](../../layers/static_layers#gog.layers.attention.GraphAttention)
 
 Spatio-temporal blocks can be stacked and work for graphs that only contain node features, as well as graphs
 with both node and edge features.
@@ -63,8 +63,8 @@ using the same dimensions as described for the `Spatio-Temporal Convolution bloc
 ## Output blocks
 Since the procedure of spatio-temporal blocks is unique, the framework provides two output layers:
 
-- [ConvOutputBlock](/layers/temporal_layers/#gog.layers.temporal.output_layer.ConvOutputBlock) to be used with `Convolutional Spatio-Temporral blocks`
-- [RecurrentOutputBlock](/layers/temporal_layers/#gog.layers.temporal.output_layer.RecurrentOutputBlock) to be used with `Recurrent Spatio-Temporal blocks`
+- [ConvOutputBlock](../../layers/temporal_layers/#gog.layers.temporal.output_layer.ConvOutputBlock) to be used with `Convolutional Spatio-Temporral blocks`
+- [RecurrentOutputBlock](../../layers/temporal_layers/#gog.layers.temporal.output_layer.RecurrentOutputBlock) to be used with `Recurrent Spatio-Temporal blocks`
 
 For their exact functionality, check the respective documentations.
 

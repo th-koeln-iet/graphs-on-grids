@@ -3,7 +3,7 @@ This page describes a possible workflow powered by the framework. Make sure to s
 ## Initializing the dataset
 
 The first step is to convert a tabular dataset from a pandas `DataFrame` object to a `StaticGraphDataset`.
-The data format is described in the [documentation](/structure/#gog.structure.graph.StaticGraphDataset) of the dataset
+The data format is described in the [documentation](../../structure/#gog.structure.graph.StaticGraphDataset) of the dataset
 class.
 
 The code to create an instance of `StaticGraphDataset` may look like this:
@@ -39,7 +39,7 @@ workflows that will be shown.
 #### Splitting the data
 A mandatory step in every ML task, is to split the dataset into a training and test set.
 If each graph is to be treated as an individual instance, the method 
-[create_train_test_split()](/preprocessing/#gog.preprocessing.preprocessing.create_train_test_split) can be used as seen
+[create_train_test_split()](../../preprocessing/#gog.preprocessing.preprocessing.create_train_test_split) can be used as seen
 here: 
 
 ```python
@@ -70,7 +70,7 @@ masked_train, masked_test = mask_features(train, test, features, nodes_to_mask)
 
 #### Creating a validation set
 If you want to have a validation set, to monitor the generalization performance of the model, you can use the in-built
-function [create_validation_set()](/preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
+function [create_validation_set()](../../preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
 
 ```python
 from gog.preprocessing.preprocessing import create_validation_set
@@ -80,7 +80,7 @@ X_train, X_val, y_train, y_val = create_validation_set(masked_train, train)
 
 #### Converting the data to numpy
 In order to be able to train a model with our data, it needs to a format that TensorFlow can process. Luckily, calling
-[to_numpy()](/structure/#gog.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
+[to_numpy()](../../structure/#gog.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
 
 ```python
 X_train = X_train.to_numpy()
@@ -95,7 +95,7 @@ y_val = y_val.to_numpy()
 #### Splitting the data
 If the data contains time-series information, often times a rolling window has to be created from the data. This task is
 combined with splitting the dataset with the function
-[create_train_test_split_windowed()](/preprocessing/#gog.preprocessing.preprocessing.create_train_test_split_windowed)
+[create_train_test_split_windowed()](../../preprocessing/#gog.preprocessing.preprocessing.create_train_test_split_windowed)
 and can be used like:
 
 ```python
@@ -127,7 +127,7 @@ X_train, X_test = mask_features(X_train, X_test, features, nodes_to_mask)
 
 #### Creating a validation set
 If you want to have a validation set, to monitor the generalization performance of the model, you can use the in-built
-function [create_validation_set()](/preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
+function [create_validation_set()](../../preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
 
 ```python
 from gog.preprocessing.preprocessing import create_validation_set
@@ -137,7 +137,7 @@ X_train, X_val, y_train, y_val = create_validation_set(X_train, y_train)
 
 #### Converting the data to numpy
 In order to be able to train a model with our data, it needs to a format that TensorFlow can process. Luckily, calling
-[to_numpy()](/structure/#gog.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
+[to_numpy()](../../structure/#gog.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
 
 ```python
 X_train = X_train.to_numpy()
@@ -149,7 +149,7 @@ y_val = y_val.to_numpy()
 ```
 
 ## Creating and training the model
-If you are unsure on how to create a model using the provided graph layers, check the [page](/usage/model_definition)
+If you are unsure on how to create a model using the provided graph layers, check the [page](../../usage/model_definition)
 where multiple examples are shown. Beware the limitations when using edge features.
 
 Training the model is very straightforward since there are no differences to training any other model in TF/Keras. 
