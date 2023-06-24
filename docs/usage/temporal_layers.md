@@ -58,7 +58,7 @@ prediction of the recurrent layers.
 
 **NOTE**: The mentioned dimensionalities do not apply to the `GraphConvLSTM` since it uses a 5D input instead of 3D. It 
 receives an additional empty channel dimension. Its convolution is configured to work on a single filter only, but
-using the same dimensions as described for the `Spatio-Temporal Convolution blocks`
+using the same dimensions as described for the `Spatio-Temporal Convolution blocks`.
 
 ## Output blocks
 Since the procedure of spatio-temporal blocks is unique, the framework provides two output layers:
@@ -69,4 +69,9 @@ Since the procedure of spatio-temporal blocks is unique, the framework provides 
 For their exact functionality, check the respective documentations.
 
 ## Edge features in spatio-temporal blocks
-Todo...
+As shown in the tutorial on [model definition](../model_definition), edge features are fed into each layer manually.
+They are used to create a weighted adjacency matrix which in turn strengthens or weakens
+the importance of some nodes of a graph. This is also true for the `spatio-temporal blocks`, however there is an 
+additional step because of the parameter `output_seq_len`. Since edge features are not part of the output of each block,
+their sequence length is constant. Therefore, when stacking layers they are passed through a convolutional layer
+to ensure that the sequence length for the edge features is equal to the sequence length of the node features. 

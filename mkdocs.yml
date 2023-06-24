@@ -1,8 +1,29 @@
 site_name: Graphs on Grids
+repo_url: https://github.com/th-koeln-iet/graphs-on-grids
+repo_name: graphs-on-grids
+site_author: Allen Kletinitch
+site_url: https://graphs-on-grids.readthedocs.io/
 
 theme:
   name: "material"
   logo: img/logo.png
+  favicon: img/logo.png
+  features:
+    - navigation.sections
+    - content.code.copy
+  palette:
+
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 nav:
   - Home: index.md
@@ -34,3 +55,10 @@ markdown_extensions:
   - mdx_math
   - toc:
       permalink: "#"
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

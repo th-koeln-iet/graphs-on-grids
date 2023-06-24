@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from gog.structure.graph import GraphList, Graph, StaticGraphDataset
+from gog.structure import Graph, GraphList, StaticGraphDataset
 
 
 def create_graph_dataset(
@@ -51,12 +51,16 @@ def create_graph_dataset(
                     node_feature_names=feature_names,
                     edge_features=edge_features,
                     edge_feature_names=edge_feature_names,
+                    n_edges=len(edge_list),
                 )
             )
         else:
             graphs.append(
                 Graph(
-                    ID=i, node_features=node_features, node_feature_names=feature_names
+                    ID=i,
+                    node_features=node_features,
+                    node_feature_names=feature_names,
+                    n_edges=len(edge_list),
                 )
             )
     dataset = StaticGraphDataset(edge_list=edge_list, graphs=graphs)
@@ -72,9 +76,14 @@ def create_test_graph(num_features, num_nodes, num_edges=0, num_edge_features=0)
             low=0, high=50, size=(num_edges, num_edge_features)
         )
         return Graph(
-            graph_id, node_features, feature_names, edge_features, feature_names
+            graph_id,
+            node_features,
+            feature_names,
+            edge_features,
+            feature_names,
+            n_edges=num_edges,
         )
-    return Graph(graph_id, node_features, feature_names)
+    return Graph(graph_id, node_features, feature_names, n_edges=num_edges)
 
 
 def create_test_graph_sequence(

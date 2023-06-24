@@ -4,7 +4,20 @@ import tensorflow as tf
 from tensorflow import keras
 
 import gog
-from gog import create_train_test_split_windowed
+from gog.layers import (
+    GraphLayer,
+    GraphBase,
+    GraphConvolution,
+    GraphAttention,
+    MultiHeadGraphAttention,
+    GraphConvolutionLSTM,
+    RecurrentOutputBlock,
+    GraphAttentionGRU,
+    ConvOutputBlock,
+    GraphBaseTemporalConv,
+    GraphBaseConvLSTM,
+)
+from gog.preprocessing import create_train_test_split_windowed
 from gog.preprocessing import create_train_test_split, mask_features
 from test.testUtils import create_graph_dataset
 
@@ -191,7 +204,7 @@ class TestLayersWithEdgeFeatures:
     def test_graph_base(self):
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 3
-        model = self._create_multi_input_model(gog.GraphBase, adj, embedding_size)
+        model = self._create_multi_input_model(GraphBase, adj, embedding_size)
         self._execute_layer_test(model)
 
     def test_asymmetric_adjacency_matrix(self):
@@ -199,50 +212,50 @@ class TestLayersWithEdgeFeatures:
         adj[2, 1] = -1
         embedding_size = self.n_features * 3
         with pytest.raises(ValueError) as err:
-            self._create_multi_input_model(gog.GraphBase, adj, embedding_size)
+            self._create_multi_input_model(GraphBase, adj, embedding_size)
         assert "Expected symmetric adjacency matrix" in str(err.value)
 
     def test_wrong_embedding_size(self):
         adj = self.dataset.adjacency_matrix
-        gog.GraphLayer(adj, 4)
+        GraphLayer(adj, 4)
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, -1)
+            GraphLayer(adj, -1)
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 0)
+            GraphLayer(adj, 0)
 
     def test_wrong_hidden_layer_definition(self):
         adj = self.dataset.adjacency_matrix
-        gog.GraphLayer(adj, 4, hidden_units_node=[4, 3])
-        gog.GraphLayer(adj, 4, hidden_units_edge=[4, 3])
+        GraphLayer(adj, 4, hidden_units_node=[4, 3])
+        GraphLayer(adj, 4, hidden_units_edge=[4, 3])
 
         # definition as tuple or list possible
-        gog.GraphLayer(adj, 4, hidden_units_node=(4, 3))
-        gog.GraphLayer(adj, 4, hidden_units_edge=(4, 3))
+        GraphLayer(adj, 4, hidden_units_node=(4, 3))
+        GraphLayer(adj, 4, hidden_units_edge=(4, 3))
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 4, hidden_units_node=3)
+            GraphLayer(adj, 4, hidden_units_node=3)
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 4, hidden_units_edge=3)
+            GraphLayer(adj, 4, hidden_units_edge=3)
 
     def test_wrong_dropout_range(self):
         adj = self.dataset.adjacency_matrix
-        gog.GraphLayer(adj, 4, dropout_rate=0)
-        gog.GraphLayer(adj, 4, dropout_rate=1)
+        GraphLayer(adj, 4, dropout_rate=0)
+        GraphLayer(adj, 4, dropout_rate=1)
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 4, dropout_rate=-0.1)
+            GraphLayer(adj, 4, dropout_rate=-0.1)
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 4, dropout_rate=1.1)
+            GraphLayer(adj, 4, dropout_rate=1.1)
 
     def test_wrong_activation_function(self):
         adj = self.dataset.adjacency_matrix
-        gog.GraphLayer(adj, 4, activation="relu")
+        GraphLayer(adj, 4, activation="relu")
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 4, activation="magic")
+            GraphLayer(adj, 4, activation="magic")
 
     def test_asymmetric_adj_matrix(self):
         adj = self.dataset.adjacency_matrix.copy()
         adj[0, 1] = 2
         with pytest.raises(ValueError):
-            gog.GraphLayer(adj, 4)
+            GraphLayer(adj, 4)
 
     def test_graph_base_with_mlp(self):
         adj = self.dataset.adjacency_matrix
@@ -250,7 +263,7 @@ class TestLayersWithEdgeFeatures:
 
         # test list and tuple as input types
         model = self._create_multi_input_model(
-            gog.GraphBase,
+            GraphBase,
             adj,
             embedding_size,
             hidden_units_node=(8, 4),
@@ -261,22 +274,20 @@ class TestLayersWithEdgeFeatures:
     def test_graph_conv(self):
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 3
-        model = self._create_multi_input_model(
-            gog.GraphConvolution, adj, embedding_size
-        )
+        model = self._create_multi_input_model(GraphConvolution, adj, embedding_size)
         self._execute_layer_test(model)
 
     def test_graph_attn(self):
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 3
-        model = self._create_multi_input_model(gog.GraphAttention, adj, embedding_size)
+        model = self._create_multi_input_model(GraphAttention, adj, embedding_size)
         self._execute_layer_test(model)
 
     def test_graph_attn_with_mlp(self):
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 3
         model = self._create_multi_input_model(
-            gog.GraphAttention,
+            GraphAttention,
             adj,
             embedding_size,
             hidden_units_node=[8, 4],
@@ -288,7 +299,7 @@ class TestLayersWithEdgeFeatures:
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 3
         model = self._create_multi_input_model(
-            gog.MultiHeadGraphAttention, adj, embedding_size
+            MultiHeadGraphAttention, adj, embedding_size
         )
         self._execute_layer_test(model)
 
@@ -685,8 +696,8 @@ class TestTemporalLayersWithEdgeFeatures:
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 2
         model = self._create_multi_input_temporal_model(
-            gog.GraphConvolutionLSTM,
-            gog.RecurrentOutputBlock,
+            GraphConvolutionLSTM,
+            RecurrentOutputBlock,
             adj,
             embedding_size,
             self.len_labels,
@@ -697,8 +708,8 @@ class TestTemporalLayersWithEdgeFeatures:
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 2
         model = self._create_multi_input_temporal_model(
-            gog.GraphAttentionGRU,
-            gog.RecurrentOutputBlock,
+            GraphAttentionGRU,
+            RecurrentOutputBlock,
             adj,
             embedding_size,
             self.len_labels,
@@ -709,8 +720,8 @@ class TestTemporalLayersWithEdgeFeatures:
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 2
         model = self._create_multi_input_temporal_model(
-            gog.GraphBaseConvLSTM,
-            gog.RecurrentOutputBlock,
+            GraphBaseConvLSTM,
+            RecurrentOutputBlock,
             adj,
             embedding_size,
             self.len_labels,
@@ -721,8 +732,8 @@ class TestTemporalLayersWithEdgeFeatures:
         adj = self.dataset.adjacency_matrix
         embedding_size = self.n_features * 2
         model = self._create_multi_input_temporal_model(
-            gog.GraphBaseTemporalConv,
-            gog.ConvOutputBlock,
+            GraphBaseTemporalConv,
+            ConvOutputBlock,
             adj,
             embedding_size,
             self.len_labels,

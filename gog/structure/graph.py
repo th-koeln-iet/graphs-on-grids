@@ -3,7 +3,6 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-import sklearn.preprocessing
 from tqdm import tqdm
 
 
@@ -19,6 +18,7 @@ class Graph:
         node_feature_names: list,
         edge_features: np.ndarray = None,
         edge_feature_names: list = None,
+        n_edges: int = None,
     ) -> None:
         """
 
@@ -27,8 +27,10 @@ class Graph:
         :param node_feature_names: node feature names
         :param edge_features: edge feature matrix of graph instance
         :param edge_feature_names: edge feature names
+        :param n_edges: number of edges in the graph
         """
         self.ID = ID
+        self.n_edges = n_edges
         self.edge_features = None
         self.edge_feature_names: List = edge_feature_names
         self.node_features: np.ndarray = self._set_node_features(
@@ -54,6 +56,20 @@ class Graph:
             self.edge_features = edge_features
             return
         self.edge_features = edge_features[edge_feature_names].to_numpy()
+
+    @property
+    def n_nodes(self):
+        if self.node_features:
+            return self.node_features.shape[0]
+
+    @property
+    def n_edges(self):
+        if self.edge_features:
+            return self.edge_features.shape[0]
+
+    @n_edges.setter
+    def n_edges(self, value):
+        self._n_edges = value
 
     def __copy__(self):
         copy = type(self)(
@@ -357,6 +373,7 @@ class StaticGraphDataset:
                         node_feature_names=node_feature_names,
                         edge_features=df_tmp_edge_features,
                         edge_feature_names=edge_feature_names,
+                        n_edges=num_edges,
                     )
                 )
             else:
@@ -365,6 +382,7 @@ class StaticGraphDataset:
                         ID=graph_id,
                         node_features=df_tmp_node_features,
                         node_feature_names=node_feature_names,
+                        n_edges=num_edges,
                     )
                 )
             graph_id += 1

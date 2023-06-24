@@ -1,6 +1,6 @@
 import pytest
 
-from gog import create_train_test_split_windowed
+from gog.preprocessing import create_train_test_split_windowed
 from test.testUtils import (
     create_graph_dataset,
     create_test_graph,

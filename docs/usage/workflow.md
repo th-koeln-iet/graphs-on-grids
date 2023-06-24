@@ -10,7 +10,7 @@ The code to create an instance of `StaticGraphDataset` may look like this:
 
 ```python
 import pandas as pd
-from gog.structure.graph import StaticGraphDataset
+from gog.structure import StaticGraphDataset
 
 # initialize edge list with some values 
 edge_list = ...
@@ -43,13 +43,13 @@ If each graph is to be treated as an individual instance, the method
 here: 
 
 ```python
-from gog.preprocessing.preprocessing import create_train_test_split
+from gog.preprocessing import create_train_test_split
 train, test = create_train_test_split(dataset)
 ```
 #### Scaling the data
 An optional step is to scale the data. This is easily done by calling
 ```python
-from gog.preprocessing.preprocessing import apply_scaler
+from gog.preprocessing import apply_scaler
 train, test = apply_scaler(dataset)
 
 # if edge features are present you will also need to call the function with the target parameter set to "edge"
@@ -61,7 +61,7 @@ The next step is to mask the input data. Here we can select which nodes and whic
 
 ```python
 import numpy as np
-from gog.preprocessing.preprocessing import mask_features
+from gog.preprocessing import mask_features
 
 features = ["A", "B"]
 nodes_to_mask = np.arange(0, 3)
@@ -73,7 +73,7 @@ If you want to have a validation set, to monitor the generalization performance 
 function [create_validation_set()](../../preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
 
 ```python
-from gog.preprocessing.preprocessing import create_validation_set
+from gog.preprocessing import create_validation_set
 X_train, X_val, y_train, y_val = create_validation_set(masked_train, train)
 ```
 
@@ -99,14 +99,14 @@ combined with splitting the dataset with the function
 and can be used like:
 
 ```python
-from gog.preprocessing.preprocessing import create_train_test_split_windowed
+from gog.preprocessing import create_train_test_split_windowed
 X_train, y_train, X_test, y_test = create_train_test_split_windowed(dataset, window_size=30, len_labels=3)
 ```
 
 #### Scaling the data
 An optional step is to scale the data. This is easily done by calling 
 ```python
-from gog.preprocessing.preprocessing import apply_scaler
+from gog.preprocessing import apply_scaler
 train, test = apply_scaler(dataset)
 
 # if edge features are present you will also need to call the function with the target parameter set to "edge"
@@ -118,7 +118,7 @@ The next step is to mask the input data. Here we can select which nodes and whic
 
 ```python
 import numpy as np
-from gog.preprocessing.preprocessing import mask_features
+from gog.preprocessing import mask_features
 
 features = ["A", "B"]
 nodes_to_mask = np.arange(0, 3)
@@ -130,7 +130,7 @@ If you want to have a validation set, to monitor the generalization performance 
 function [create_validation_set()](../../preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
 
 ```python
-from gog.preprocessing.preprocessing import create_validation_set
+from gog.preprocessing import create_validation_set
 X_train, X_val, y_train, y_val = create_validation_set(X_train, y_train)
 ```
 
@@ -180,7 +180,7 @@ and want to manually check which values our model is predicting, we can access t
 instance.
 
 ```python
-from gog.metrics.metrics import mean_squared_error
+from gog.metrics import mean_squared_error
 X_test = X_test.to_numpy()
 y_test = y_test.to_numpy()
 

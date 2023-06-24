@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from gog import create_train_test_split_windowed
+from gog.preprocessing import create_train_test_split_windowed
 from gog.preprocessing import (
     create_train_test_split,
     mask_features,
