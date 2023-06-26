@@ -84,7 +84,6 @@ class GraphAttentionLSTM(GraphLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -97,7 +96,6 @@ class GraphAttentionLSTM(GraphLSTM):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
         :param embedding_size: the output dimensionality of the node feature vector
-        :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
         :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
@@ -112,7 +110,6 @@ class GraphAttentionLSTM(GraphLSTM):
         super(GraphAttentionLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
-            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,
@@ -149,7 +146,6 @@ class GraphAttentionGRU(GraphGRU):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -162,7 +158,6 @@ class GraphAttentionGRU(GraphGRU):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
         :param embedding_size: the output dimensionality of the node feature vector
-        :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
         :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
@@ -177,7 +172,6 @@ class GraphAttentionGRU(GraphGRU):
         super(GraphAttentionGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
-            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,
@@ -214,7 +208,6 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_attention=None,
         dropout_rate=0,
@@ -227,7 +220,6 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
         :param embedding_size: the output dimensionality of the node feature vector
-        :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
         :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
@@ -242,7 +234,6 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         super(GraphAttentionConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
-            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_attention,
             dropout_rate=dropout_rate,

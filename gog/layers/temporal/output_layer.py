@@ -24,7 +24,7 @@ class ConvOutputBlock(keras.layers.Layer):
         batch_size, seq_len, num_nodes, num_features = input_shape
         self.output_conv = keras.layers.Conv2D(
             filters=self.output_seq_len,
-            kernel_size=(num_features, 1),
+            kernel_size=(1, num_features),
             padding="same",
             activation="relu",
         )

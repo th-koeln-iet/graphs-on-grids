@@ -84,7 +84,6 @@ class GraphConvolutionLSTM(GraphLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -97,7 +96,6 @@ class GraphConvolutionLSTM(GraphLSTM):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
         :param embedding_size: the output dimensionality of the node feature vector
-        :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
         :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
@@ -112,7 +110,6 @@ class GraphConvolutionLSTM(GraphLSTM):
         super(GraphConvolutionLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
-            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
@@ -149,7 +146,6 @@ class GraphConvolutionGRU(GraphGRU):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -162,7 +158,6 @@ class GraphConvolutionGRU(GraphGRU):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
         :param embedding_size: the output dimensionality of the node feature vector
-        :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
         :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
@@ -177,7 +172,6 @@ class GraphConvolutionGRU(GraphGRU):
         super(GraphConvolutionGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
-            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
@@ -214,7 +208,6 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -227,7 +220,6 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
         :param embedding_size: the output dimensionality of the node feature vector
-        :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
         :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
@@ -242,7 +234,6 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
         super(GraphConvolutionConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
-            output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
             hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,

@@ -415,13 +415,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphBaseLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphBaseLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphBaseLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphBaseLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -436,13 +432,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphBaseConvLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphBaseConvLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphBaseConvLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphBaseConvLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -457,9 +449,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphBaseGRU(adj, embedding_size, output_seq_len=3),
+                gog.layers.temporal.GraphBaseGRU(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphBaseGRU(adj, embedding_size, output_seq_len=3),
+                gog.layers.temporal.GraphBaseGRU(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -495,13 +487,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphConvolutionLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphConvolutionLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphConvolutionLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphConvolutionLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -516,13 +504,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphConvolutionConvLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphConvolutionConvLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphConvolutionConvLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphConvolutionConvLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -537,13 +521,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphConvolutionGRU(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphConvolutionGRU(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphConvolutionGRU(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphConvolutionGRU(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -579,13 +559,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphAttentionLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphAttentionLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphAttentionLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphAttentionLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -600,13 +576,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphAttentionConvLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphAttentionConvLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphAttentionConvLSTM(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphAttentionConvLSTM(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -621,13 +593,9 @@ class TestTemporalLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
-                gog.layers.temporal.GraphAttentionGRU(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphAttentionGRU(adj, embedding_size),
                 keras.layers.ReLU(),
-                gog.layers.temporal.GraphAttentionGRU(
-                    adj, embedding_size, output_seq_len=3
-                ),
+                gog.layers.temporal.GraphAttentionGRU(adj, embedding_size),
                 keras.layers.ReLU(),
                 gog.layers.temporal.RecurrentOutputBlock(
                     output_seq_len=3, units=self.n_features
@@ -700,7 +668,6 @@ class TestTemporalLayersWithEdgeFeatures:
             RecurrentOutputBlock,
             adj,
             embedding_size,
-            self.len_labels,
         )
         self._execute_temporal_layer_test(model)
 
@@ -712,7 +679,6 @@ class TestTemporalLayersWithEdgeFeatures:
             RecurrentOutputBlock,
             adj,
             embedding_size,
-            self.len_labels,
         )
         self._execute_temporal_layer_test(model)
 
@@ -724,7 +690,6 @@ class TestTemporalLayersWithEdgeFeatures:
             RecurrentOutputBlock,
             adj,
             embedding_size,
-            self.len_labels,
         )
         self._execute_temporal_layer_test(model)
 
@@ -758,7 +723,7 @@ class TestTemporalLayersWithEdgeFeatures:
         output_layer,
         adj,
         embedding_size,
-        output_seq_len,
+        output_seq_len=None,
         hidden_units_node=None,
         hidden_units_edge=None,
     ):
@@ -767,22 +732,65 @@ class TestTemporalLayersWithEdgeFeatures:
         if hidden_units_edge is None:
             hidden_units_edge = []
 
-        input_layer = keras.layers.Input(
+        input_layer_node = keras.layers.Input(
             (self.window_size, self.n_nodes, self.n_features)
         )
         input_layer_edge = keras.layers.Input(
             (self.window_size, self.n_edges, self.n_features)
         )
-        gnn = graph_layer(
-            adj, embedding_size, output_seq_len, hidden_units_node, hidden_units_edge
-        )([input_layer, input_layer_edge])
+        gnn = self._set_graph_layer(
+            graph_layer,
+            adj,
+            embedding_size,
+            output_seq_len,
+            hidden_units_node,
+            hidden_units_edge,
+            [input_layer_node, input_layer_edge],
+        )
         gnn = keras.layers.ReLU()(gnn)
-        gnn = graph_layer(
-            adj, embedding_size, output_seq_len, hidden_units_node, hidden_units_edge
-        )([gnn, input_layer_edge])
+        gnn = self._set_graph_layer(
+            graph_layer,
+            adj,
+            embedding_size,
+            output_seq_len,
+            hidden_units_node,
+            hidden_units_edge,
+            [gnn, input_layer_edge],
+        )
         gnn = keras.layers.ReLU()(gnn)
-        gnn = graph_layer(
-            adj, embedding_size, output_seq_len, hidden_units_node, hidden_units_edge
-        )([gnn, input_layer_edge])
+        gnn = self._set_graph_layer(
+            graph_layer,
+            adj,
+            embedding_size,
+            output_seq_len,
+            hidden_units_node,
+            hidden_units_edge,
+            [gnn, input_layer_edge],
+        )
         out = output_layer(self.len_labels, self.n_features)(gnn)
-        return keras.models.Model(inputs=[input_layer, input_layer_edge], outputs=out)
+        return keras.models.Model(
+            inputs=[input_layer_node, input_layer_edge], outputs=out
+        )
+
+    def _set_graph_layer(
+        self,
+        graph_layer,
+        adj,
+        embedding_size,
+        output_seq_len,
+        hidden_units_node,
+        hidden_units_edge,
+        inputs,
+    ):
+        if output_seq_len is not None:
+            return graph_layer(
+                adj,
+                embedding_size,
+                output_seq_len,
+                hidden_units_node,
+                hidden_units_edge,
+            )(inputs)
+        else:
+            return graph_layer(
+                adj, embedding_size, hidden_units_node, hidden_units_edge
+            )(inputs)

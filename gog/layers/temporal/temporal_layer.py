@@ -108,7 +108,6 @@ class GraphLSTM(keras.layers.Layer):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -119,7 +118,6 @@ class GraphLSTM(keras.layers.Layer):
         bias_initializer="zeros",
     ):
         super(GraphLSTM, self).__init__()
-        self.output_seq_len = output_seq_len
         self.adjacency_matrix = adjacency_matrix
         self.embedding_size = embedding_size
         self.hidden_units_node = hidden_units_node
@@ -146,11 +144,7 @@ class GraphLSTM(keras.layers.Layer):
 
         self.lstm_out = keras.layers.LSTM(
             units=num_nodes * self.embedding_size,
-            return_sequences=False,
-        )
-
-        self.dense_out = keras.layers.Dense(
-            units=self.output_seq_len * self.embedding_size, activation=self.activation
+            return_sequences=True,
         )
 
         if isinstance(input_shape, list):
@@ -228,20 +222,13 @@ class GraphLSTM(keras.layers.Layer):
             shape=(batch_size, seq_len, num_nodes * self.embedding_size),
         )
 
-        # output dimension (batch_size, num_nodes * embedding_size)
+        # output dimension (batch_size, seq_len, num_nodes * embedding_size)
         output_lstm = self.lstm_out(output_reshaped)
 
         output_lstm_reshaped = tf.reshape(
-            output_lstm, shape=(batch_size, num_nodes, self.embedding_size)
+            output_lstm, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
-
-        output_sequence = self.dense_out(output_lstm_reshaped)
-        output_sequence = tf.expand_dims(output_sequence, axis=1)
-        output_sequence = tf.reshape(
-            output_sequence,
-            (batch_size, self.output_seq_len, num_nodes, self.embedding_size),
-        )
-        return output_sequence
+        return output_lstm_reshaped
 
     def compute_edge_features_temporal(
         self,
@@ -277,7 +264,6 @@ class GraphGRU(keras.layers.Layer):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -288,7 +274,6 @@ class GraphGRU(keras.layers.Layer):
         bias_initializer="zeros",
     ):
         super(GraphGRU, self).__init__()
-        self.output_seq_len = output_seq_len
         self.adjacency_matrix = adjacency_matrix
         self.embedding_size = embedding_size
         self.hidden_units_node = hidden_units_node
@@ -315,12 +300,9 @@ class GraphGRU(keras.layers.Layer):
 
         self.gru_out = keras.layers.GRU(
             units=num_nodes * self.embedding_size,
-            return_sequences=False,
+            return_sequences=True,
         )
 
-        self.dense_out = keras.layers.Dense(
-            units=self.output_seq_len * self.embedding_size, activation=self.activation
-        )
         if isinstance(input_shape, list):
             self.gru_edge = keras.layers.GRU(
                 units=num_edge_features,
@@ -396,20 +378,13 @@ class GraphGRU(keras.layers.Layer):
             shape=(batch_size, seq_len, num_nodes * self.embedding_size),
         )
 
-        # output dimension (batch_size, num_nodes * embedding_size)
+        # output dimension (batch_size, seq_len, num_nodes * embedding_size)
         output_gru = self.gru_out(output_reshaped)
 
         output_gru_reshaped = tf.reshape(
-            output_gru, shape=(batch_size, num_nodes, self.embedding_size)
+            output_gru, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
-
-        output_sequence = self.dense_out(output_gru_reshaped)
-        output_sequence = tf.expand_dims(output_sequence, axis=1)
-        output_sequence = tf.reshape(
-            output_sequence,
-            (batch_size, self.output_seq_len, num_nodes, self.embedding_size),
-        )
-        return output_sequence
+        return output_gru_reshaped
 
     def compute_edge_features_temporal(
         self,
@@ -445,7 +420,6 @@ class GraphConvLSTM(keras.layers.Layer):
         self,
         adjacency_matrix: np.ndarray,
         embedding_size,
-        output_seq_len,
         hidden_units_node=None,
         hidden_units_edge=None,
         dropout_rate=0,
@@ -456,7 +430,6 @@ class GraphConvLSTM(keras.layers.Layer):
         bias_initializer="zeros",
     ):
         super(GraphConvLSTM, self).__init__()
-        self.output_seq_len = output_seq_len
         self.adjacency_matrix = adjacency_matrix
         self.embedding_size = embedding_size
         self.hidden_units_node = hidden_units_node
@@ -489,11 +462,7 @@ class GraphConvLSTM(keras.layers.Layer):
             kernel_size=(1, self.embedding_size),
             padding="same",
             activation="relu",
-            return_sequences=False,
-        )
-
-        self.dense_out = keras.layers.Dense(
-            units=self.output_seq_len * self.embedding_size, activation=self.activation
+            return_sequences=True,
         )
 
         if isinstance(input_shape, list):
@@ -576,16 +545,10 @@ class GraphConvLSTM(keras.layers.Layer):
         output_lstm = tf.squeeze(self.lstm_out(output_reshaped), axis=-1)
 
         output_lstm_reshaped = tf.reshape(
-            output_lstm, shape=(batch_size, num_nodes, self.embedding_size)
+            output_lstm, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
 
-        output_sequence = self.dense_out(output_lstm_reshaped)
-        output_sequence = tf.expand_dims(output_sequence, axis=1)
-        output_sequence = tf.reshape(
-            output_sequence,
-            (batch_size, self.output_seq_len, num_nodes, self.embedding_size),
-        )
-        return output_sequence
+        return output_lstm_reshaped
 
     def compute_edge_features_temporal(
         self,
