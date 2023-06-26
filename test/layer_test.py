@@ -141,7 +141,7 @@ class TestLayers:
 
     def test_graph_mh_attn(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.n_nodes, self.n_features)),
@@ -297,7 +297,7 @@ class TestLayersWithEdgeFeatures:
 
     def test_graph_mh_attn(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = self._create_multi_input_model(
             MultiHeadGraphAttention, adj, embedding_size
         )
@@ -390,7 +390,7 @@ class TestTemporalLayers:
 
     def test_graph_base_temporal_conv(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -411,7 +411,7 @@ class TestTemporalLayers:
 
     def test_graph_base_lstm(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -432,7 +432,7 @@ class TestTemporalLayers:
 
     def test_graph_base_conv_lstm(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -453,7 +453,7 @@ class TestTemporalLayers:
 
     def test_graph_base_gru(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -470,7 +470,7 @@ class TestTemporalLayers:
 
     def test_graph_conv_temporal_conv(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -491,7 +491,7 @@ class TestTemporalLayers:
 
     def test_graph_conv_lstm(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -512,7 +512,7 @@ class TestTemporalLayers:
 
     def test_graph_conv_conv_lstm(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -533,7 +533,7 @@ class TestTemporalLayers:
 
     def test_graph_conv_gru(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -554,7 +554,7 @@ class TestTemporalLayers:
 
     def test_graph_attn_temporal_conv(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -575,7 +575,7 @@ class TestTemporalLayers:
 
     def test_graph_attn_lstm(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -596,7 +596,7 @@ class TestTemporalLayers:
 
     def test_graph_attn_conv_lstm(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),
@@ -617,7 +617,7 @@ class TestTemporalLayers:
 
     def test_graph_attn_gru(self):
         adj = self.dataset.adjacency_matrix
-        embedding_size = self.n_features * 3
+        embedding_size = self.n_features * 2
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.window_size, self.n_nodes, self.n_features)),

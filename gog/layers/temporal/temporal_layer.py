@@ -1,6 +1,6 @@
-import keras.layers
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
 
 class TemporalConv(keras.layers.Layer):
@@ -42,14 +42,14 @@ class TemporalConv(keras.layers.Layer):
 
         self.tmp_conv1 = keras.layers.Conv2D(
             filters=seq_len,
-            kernel_size=(num_node_features, 1),
+            kernel_size=(1, num_node_features),
             padding="same",
             activation="relu",
             name="conv_1",
         )
         self.tmp_conv2 = keras.layers.Conv2D(
             filters=self.output_seq_len,
-            kernel_size=(self.embedding_size, 1),
+            kernel_size=(1, self.embedding_size),
             padding="same",
             activation="relu",
             name="conv_2",
@@ -57,7 +57,7 @@ class TemporalConv(keras.layers.Layer):
         if isinstance(input_shape, list):
             self.tmp_conv_edge = keras.layers.Conv2D(
                 filters=seq_len,
-                kernel_size=(num_edge_features, 1),
+                kernel_size=(1, num_edge_features),
                 padding="same",
                 activation="relu",
                 name="conv_edge",
@@ -161,7 +161,7 @@ class GraphLSTM(keras.layers.Layer):
 
             self.tmp_conv_edge = keras.layers.Conv2D(
                 filters=seq_len,
-                kernel_size=(num_edge_features, 1),
+                kernel_size=(1, num_edge_features),
                 padding="same",
                 activation="relu",
                 name="conv_edge",
@@ -329,7 +329,7 @@ class GraphGRU(keras.layers.Layer):
 
             self.tmp_conv_edge = keras.layers.Conv2D(
                 filters=seq_len,
-                kernel_size=(num_edge_features, 1),
+                kernel_size=(1, num_edge_features),
                 padding="same",
                 activation="relu",
                 name="conv_edge",
@@ -478,7 +478,7 @@ class GraphConvLSTM(keras.layers.Layer):
 
         self.lstm_in = keras.layers.ConvLSTM2D(
             filters=1,
-            kernel_size=(num_node_features, 1),
+            kernel_size=(1, num_node_features),
             padding="same",
             activation="relu",
             return_sequences=True,
@@ -486,7 +486,7 @@ class GraphConvLSTM(keras.layers.Layer):
 
         self.lstm_out = keras.layers.ConvLSTM2D(
             filters=1,
-            kernel_size=(self.embedding_size, 1),
+            kernel_size=(1, self.embedding_size),
             padding="same",
             activation="relu",
             return_sequences=False,
@@ -499,7 +499,7 @@ class GraphConvLSTM(keras.layers.Layer):
         if isinstance(input_shape, list):
             self.lstm_edge = keras.layers.ConvLSTM2D(
                 filters=1,
-                kernel_size=(num_node_features, 1),
+                kernel_size=(1, num_node_features),
                 padding="same",
                 activation="relu",
                 return_sequences=True,
@@ -507,7 +507,7 @@ class GraphConvLSTM(keras.layers.Layer):
 
             self.tmp_conv_edge = keras.layers.Conv2D(
                 filters=seq_len,
-                kernel_size=(num_edge_features, 1),
+                kernel_size=(1, num_edge_features),
                 padding="same",
                 activation="relu",
                 name="conv_edge",
