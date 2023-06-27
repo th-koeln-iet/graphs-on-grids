@@ -85,7 +85,6 @@ class TestLayers:
                 gog.layers.FlattenedDenseOutput(self.n_features),
             ]
         )
-        print(model.summary())
         self._execute_layer_test(model)
 
     def test_graph_base_with_mlp(self):
@@ -158,7 +157,6 @@ class TestLayers:
 
     def _execute_layer_test(self, model):
         model.compile(optimizer=self.optimizer, loss=self.loss_fn, run_eagerly=True)
-        print(model.summary())
         model.fit(
             self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
         )
@@ -167,6 +165,7 @@ class TestLayers:
         assert len(y_pred.shape) == 3
         assert y_pred.shape[1] == self.n_nodes
         assert y_pred.shape[2] == self.n_features
+        assert model.get_config() is not None
 
 
 class TestLayersWithEdgeFeatures:
@@ -313,6 +312,7 @@ class TestLayersWithEdgeFeatures:
         assert len(y_pred.shape) == 3
         assert y_pred.shape[1] == self.n_nodes
         assert y_pred.shape[2] == self.n_features
+        assert model.get_config() is not None
 
     def _create_multi_input_model(
         self,
@@ -615,6 +615,7 @@ class TestTemporalLayers:
         assert y_pred.shape[1] == self.len_labels
         assert y_pred.shape[2] == self.n_nodes
         assert y_pred.shape[3] == self.n_features
+        assert model.get_config() is not None
 
 
 class TestTemporalLayersWithEdgeFeatures:
@@ -716,6 +717,7 @@ class TestTemporalLayersWithEdgeFeatures:
         assert y_pred.shape[1] == self.len_labels
         assert y_pred.shape[2] == self.n_nodes
         assert y_pred.shape[3] == self.n_features
+        assert model.get_config() is not None
 
     def _create_multi_input_temporal_model(
         self,

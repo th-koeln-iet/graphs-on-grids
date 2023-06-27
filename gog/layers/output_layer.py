@@ -30,3 +30,13 @@ class FlattenedDenseOutput(keras.layers.Layer):
         flat_dense_output = self.dense_flat(flattened)
         output_reshaped = tf.reshape(flat_dense_output, (-1, num_nodes, self.units))
         return output_reshaped
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "units": self.units,
+                "activation": keras.activations.serialize(self.activation),
+            }
+        )
+        return config

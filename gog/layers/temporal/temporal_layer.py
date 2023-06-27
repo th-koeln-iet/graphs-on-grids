@@ -102,6 +102,26 @@ class TemporalConv(keras.layers.Layer):
         conv_2_transposed = tf.transpose(temporal_conv_2, perm=[0, 3, 1, 2])
         return conv_2_transposed
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "adjacency_matrix": self.adjacency_matrix,
+                "embedding_size": self.embedding_size,
+                "output_seq_len": self.output_seq_len,
+                "hidden_units_node": self.hidden_units_node,
+                "hidden_units_edge": self.hidden_units_edge,
+                "dropout_rate": self.dropout_rate,
+                "use_bias": self.use_bias,
+                "activation": self.activation,
+                "weight_initializer": self.weight_initializer,
+                "weight_regularizer": self.weight_regularizer,
+                "bias_initializer": self.bias_initializer,
+                "graph_layer": self.graph_layer,
+            }
+        )
+        return config
+
 
 class GraphLSTM(keras.layers.Layer):
     def __init__(
@@ -258,6 +278,25 @@ class GraphLSTM(keras.layers.Layer):
         )
         return reshaped_edge
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "adjacency_matrix": self.adjacency_matrix,
+                "embedding_size": self.embedding_size,
+                "hidden_units_node": self.hidden_units_node,
+                "hidden_units_edge": self.hidden_units_edge,
+                "dropout_rate": self.dropout_rate,
+                "use_bias": self.use_bias,
+                "activation": self.activation,
+                "weight_initializer": self.weight_initializer,
+                "weight_regularizer": self.weight_regularizer,
+                "bias_initializer": self.bias_initializer,
+                "graph_layer": self.graph_layer,
+            }
+        )
+        return config
+
 
 class GraphGRU(keras.layers.Layer):
     def __init__(
@@ -413,6 +452,25 @@ class GraphGRU(keras.layers.Layer):
             conv_edge, shape=(batch_size * seq_len, num_edges, num_edge_features)
         )
         return reshaped_edge
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "adjacency_matrix": self.adjacency_matrix,
+                "embedding_size": self.embedding_size,
+                "hidden_units_node": self.hidden_units_node,
+                "hidden_units_edge": self.hidden_units_edge,
+                "dropout_rate": self.dropout_rate,
+                "use_bias": self.use_bias,
+                "activation": self.activation,
+                "weight_initializer": self.weight_initializer,
+                "weight_regularizer": self.weight_regularizer,
+                "bias_initializer": self.bias_initializer,
+                "graph_layer": self.graph_layer,
+            }
+        )
+        return config
 
 
 class GraphConvLSTM(keras.layers.Layer):
@@ -574,6 +632,25 @@ class GraphConvLSTM(keras.layers.Layer):
             conv_edge, shape=(batch_size * seq_len, num_edges, num_edge_features)
         )
         return reshaped_edge
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "adjacency_matrix": self.adjacency_matrix,
+                "embedding_size": self.embedding_size,
+                "hidden_units_node": self.hidden_units_node,
+                "hidden_units_edge": self.hidden_units_edge,
+                "dropout_rate": self.dropout_rate,
+                "use_bias": self.use_bias,
+                "activation": self.activation,
+                "weight_initializer": self.weight_initializer,
+                "weight_regularizer": self.weight_regularizer,
+                "bias_initializer": self.bias_initializer,
+                "graph_layer": self.graph_layer,
+            }
+        )
+        return config
 
 
 def init_shape_variables(inputs):

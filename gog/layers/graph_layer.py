@@ -103,13 +103,7 @@ class GraphLayer(keras.layers.Layer):
             setattr(
                 self,
                 f"dense_{self.mlp_layer_index}",
-                keras.layers.Dense(
-                    n_neurons,
-                    use_bias=self.use_bias,
-                    kernel_initializer=self.weight_initializer,
-                    bias_initializer=self.bias_initializer,
-                    kernel_regularizer=self.weight_regularizer,
-                ),
+                keras.layers.Dense(n_neurons),
             )
             mlp_layers.append(getattr(self, f"dense_{self.mlp_layer_index}"))
 
@@ -196,3 +190,25 @@ class GraphLayer(keras.layers.Layer):
         # Shape (batch_size, |E| + |V|, 2 * |X_v| + |E|)
         node_states_expanded = tf.concat([node_states_expanded, edge_features], axis=2)
         return node_states_expanded
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "adjacency_matrix": self.adjacency_matrix,
+                "embedding_size": self.embedding_size,
+                "hidden_units_node": self.hidden_units_node,
+                "hidden_units_edge": self.hidden_units_edge,
+                "dropout_rate": self.dropout_rate,
+                "use_bias": self.use_bias,
+                "activation": keras.activations.serialize(self.activation),
+                "weight_initializer": keras.initializers.serialize(
+                    self.weight_initializer
+                ),
+                "weight_regularizer": keras.regularizers.serialize(
+                    self.weight_regularizer
+                ),
+                "bias_initializer": keras.initializers.serialize(self.bias_initializer),
+            }
+        )
+        return config

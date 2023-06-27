@@ -113,3 +113,8 @@ class GraphBase(GraphLayer):
             output = self.activation(output)
 
         return output
+
+    def get_config(self):
+        config = super().get_config()
+        config["aggregation_method"] = self.aggregation_method
+        return config

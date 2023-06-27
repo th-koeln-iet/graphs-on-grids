@@ -37,6 +37,17 @@ class ConvOutputBlock(keras.layers.Layer):
         output = self.dense(output_conv_transposed)
         return output
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "output_seq_len": self.output_seq_len,
+                "units": self.units,
+                "activation": keras.activations.serialize(self.activation),
+            }
+        )
+        return config
+
 
 class RecurrentOutputBlock(keras.layers.Layer):
     """
@@ -82,3 +93,14 @@ class RecurrentOutputBlock(keras.layers.Layer):
             dense_out, (batch_size, self.output_seq_len, num_nodes, self.units)
         )
         return reshape
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "output_seq_len": self.output_seq_len,
+                "units": self.units,
+                "activation": keras.activations.serialize(self.activation),
+            }
+        )
+        return config

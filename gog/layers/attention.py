@@ -135,7 +135,7 @@ class GraphAttention(GraphLayer):
         )
 
 
-class MultiHeadGraphAttention(keras.layers.Layer):
+class MultiHeadGraphAttention(GraphLayer):
     r"""
     Multi-head graph attention layer as shown in the [original paper](https://arxiv.org/pdf/1710.10903.pdf)
 
@@ -174,10 +174,23 @@ class MultiHeadGraphAttention(keras.layers.Layer):
         :param bias_initializer: Bias initializer to be used within the layer
         :param concat_heads: Whether to concatenate (True) results from the attention heads or average (False) them.
         """
-        super(MultiHeadGraphAttention, self).__init__()
+        super(MultiHeadGraphAttention, self).__init__(
+            adjacency_matrix=adjacency_matrix,
+            hidden_units_node=hidden_units_node,
+            hidden_units_edge=hidden_units_attention,
+            embedding_size=embedding_size,
+            dropout_rate=dropout_rate,
+            use_bias=use_bias,
+            activation=activation,
+            weight_initializer=weight_initializer,
+            weight_regularizer=weight_regularizer,
+            bias_initializer=bias_initializer,
+        )
         self.concat_heads = concat_heads
         self.num_heads = num_heads
         self.activation = keras.activations.get(activation)
+        # do not create weights for Sequential node feature MLP
+        self.node_feature_MLP = None
         self.attention_layers = [
             GraphAttention(
                 adjacency_matrix=adjacency_matrix,
@@ -208,3 +221,9 @@ class MultiHeadGraphAttention(keras.layers.Layer):
             outputs = self.activation(outputs)
 
         return outputs
+
+    def get_config(self):
+        config = super().get_config()
+        config["num_heads"] = self.num_heads
+        config["concat_heads"] = self.concat_heads
+        return config
