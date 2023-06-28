@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from gog.structure import Graph, GraphList, StaticGraphDataset
+from graphs_on_grids.structure import Graph, GraphList, StaticGraphDataset
 
 
 def create_graph_dataset(

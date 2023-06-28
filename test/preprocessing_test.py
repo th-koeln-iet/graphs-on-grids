@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from gog.preprocessing import create_train_test_split_windowed
-from gog.preprocessing import (
+from graphs_on_grids.preprocessing import create_train_test_split_windowed
+from graphs_on_grids.preprocessing import (
     create_train_test_split,
     mask_features,
     create_validation_set,

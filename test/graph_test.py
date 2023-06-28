@@ -1,6 +1,6 @@
 import pytest
 
-from gog.preprocessing import create_train_test_split_windowed
+from graphs_on_grids.preprocessing import create_train_test_split_windowed
 from test.testUtils import (
     create_graph_dataset,
     create_test_graph,

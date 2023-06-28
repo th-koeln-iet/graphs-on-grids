@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from gog.layers.graph_layer import GraphLayer
+from graphs_on_grids.layers.graph_layer import GraphLayer
 
 
 class GraphConvolution(GraphLayer):

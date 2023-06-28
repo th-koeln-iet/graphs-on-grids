@@ -1,7 +1,7 @@
 import numpy as np
 
-from gog.layers import GraphAttention
-from gog.layers.temporal.temporal_layer import (
+from graphs_on_grids.layers import GraphConvolution
+from graphs_on_grids.layers.temporal.temporal_layer import (
     TemporalConv,
     GraphLSTM,
     GraphGRU,
@@ -9,9 +9,9 @@ from gog.layers.temporal.temporal_layer import (
 )
 
 
-class GraphAttentionTemporalConv(TemporalConv):
+class GraphConvTemporalConv(TemporalConv):
     """
-    Implementation of a `TemporalConv` layer using a `GraphAttention` layer as graph layer.
+    Implementation of a `TemporalConv` layer using a `GraphConvolution` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
@@ -21,7 +21,7 @@ class GraphAttentionTemporalConv(TemporalConv):
         embedding_size,
         output_seq_len,
         hidden_units_node=None,
-        hidden_units_attention=None,
+        hidden_units_edge=None,
         dropout_rate=0,
         use_bias=True,
         activation=None,
@@ -35,8 +35,8 @@ class GraphAttentionTemporalConv(TemporalConv):
         :param output_seq_len: number of graphs in the output sequence
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
-        :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
-        computing attention scores
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
         :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
         :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
         :param activation: Activation function to be used within the layer
@@ -44,12 +44,12 @@ class GraphAttentionTemporalConv(TemporalConv):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphAttentionTemporalConv, self).__init__(
+        super(GraphConvTemporalConv, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             output_seq_len=output_seq_len,
             hidden_units_node=hidden_units_node,
-            hidden_units_edge=hidden_units_attention,
+            hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
             use_bias=use_bias,
             activation=activation,
@@ -60,11 +60,11 @@ class GraphAttentionTemporalConv(TemporalConv):
 
     def build(self, input_shape):
         super().build(input_shape=input_shape)
-        self.graph_layer = GraphAttention(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
-            hidden_units_attention=self.hidden_units_edge,
+            hidden_units_edge=self.hidden_units_edge,
             dropout_rate=self.dropout_rate,
             use_bias=self.use_bias,
             activation=self.activation,
@@ -74,9 +74,9 @@ class GraphAttentionTemporalConv(TemporalConv):
         )
 
 
-class GraphAttentionLSTM(GraphLSTM):
+class GraphConvolutionLSTM(GraphLSTM):
     """
-    Implementation of a `GraphLSTM` layer using a `GraphAttention` layer as graph layer.
+    Implementation of a `GraphLSTM` layer using a `GraphConvolution` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
@@ -85,7 +85,7 @@ class GraphAttentionLSTM(GraphLSTM):
         adjacency_matrix: np.ndarray,
         embedding_size,
         hidden_units_node=None,
-        hidden_units_attention=None,
+        hidden_units_edge=None,
         dropout_rate=0,
         use_bias=True,
         activation=None,
@@ -98,8 +98,8 @@ class GraphAttentionLSTM(GraphLSTM):
         :param embedding_size: the output dimensionality of the node feature vector
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
-        :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
-        computing attention scores
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
         :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
         :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
         :param activation: Activation function to be used within the layer
@@ -107,11 +107,11 @@ class GraphAttentionLSTM(GraphLSTM):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphAttentionLSTM, self).__init__(
+        super(GraphConvolutionLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
-            hidden_units_edge=hidden_units_attention,
+            hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
             use_bias=use_bias,
             activation=activation,
@@ -122,11 +122,11 @@ class GraphAttentionLSTM(GraphLSTM):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphAttention(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
-            hidden_units_attention=self.hidden_units_edge,
+            hidden_units_edge=self.hidden_units_edge,
             dropout_rate=self.dropout_rate,
             use_bias=self.use_bias,
             activation=self.activation,
@@ -136,9 +136,9 @@ class GraphAttentionLSTM(GraphLSTM):
         )
 
 
-class GraphAttentionGRU(GraphGRU):
+class GraphConvolutionGRU(GraphGRU):
     """
-    Implementation of a `GraphGRU` layer using a `GraphAttention` layer as graph layer.
+    Implementation of a `GraphGRU` layer using a `GraphConvolution` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
@@ -147,7 +147,7 @@ class GraphAttentionGRU(GraphGRU):
         adjacency_matrix: np.ndarray,
         embedding_size,
         hidden_units_node=None,
-        hidden_units_attention=None,
+        hidden_units_edge=None,
         dropout_rate=0,
         use_bias=True,
         activation=None,
@@ -160,8 +160,8 @@ class GraphAttentionGRU(GraphGRU):
         :param embedding_size: the output dimensionality of the node feature vector
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
-        :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
-        computing attention scores
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
         :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
         :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
         :param activation: Activation function to be used within the layer
@@ -169,11 +169,11 @@ class GraphAttentionGRU(GraphGRU):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphAttentionGRU, self).__init__(
+        super(GraphConvolutionGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
-            hidden_units_edge=hidden_units_attention,
+            hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
             use_bias=use_bias,
             activation=activation,
@@ -184,11 +184,11 @@ class GraphAttentionGRU(GraphGRU):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphAttention(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
-            hidden_units_attention=self.hidden_units_edge,
+            hidden_units_edge=self.hidden_units_edge,
             dropout_rate=self.dropout_rate,
             use_bias=self.use_bias,
             activation=self.activation,
@@ -198,9 +198,9 @@ class GraphAttentionGRU(GraphGRU):
         )
 
 
-class GraphAttentionConvLSTM(GraphConvLSTM):
+class GraphConvolutionConvLSTM(GraphConvLSTM):
     """
-    Implementation of a `GraphConvLSTM` layer using a `GraphAttention` layer as graph layer.
+    Implementation of a `GraphConvLSTM` layer using a `GraphConvolution` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
@@ -209,7 +209,7 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         adjacency_matrix: np.ndarray,
         embedding_size,
         hidden_units_node=None,
-        hidden_units_attention=None,
+        hidden_units_edge=None,
         dropout_rate=0,
         use_bias=True,
         activation=None,
@@ -222,8 +222,8 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         :param embedding_size: the output dimensionality of the node feature vector
         :param hidden_units_node: list or tuple of neuron counts in the hidden layers used in the MLP for processing
         node features
-        :param hidden_units_attention: list or tuple of neuron counts in the hidden layers used in the MLP for
-        computing attention scores
+        :param hidden_units_edge: list or tuple of neuron counts in the hidden layers used in the MLP for processing
+        edge features
         :param dropout_rate: The dropout rate used after each dense layer in the node- or edge-MLPs
         :param use_bias: Whether to use bias in the hidden layers in the node- and edge-MLPs
         :param activation: Activation function to be used within the layer
@@ -231,11 +231,11 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphAttentionConvLSTM, self).__init__(
+        super(GraphConvolutionConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
-            hidden_units_edge=hidden_units_attention,
+            hidden_units_edge=hidden_units_edge,
             dropout_rate=dropout_rate,
             use_bias=use_bias,
             activation=activation,
@@ -246,11 +246,11 @@ class GraphAttentionConvLSTM(GraphConvLSTM):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphAttention(
+        self.graph_layer = GraphConvolution(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
-            hidden_units_attention=self.hidden_units_edge,
+            hidden_units_edge=self.hidden_units_edge,
             dropout_rate=self.dropout_rate,
             use_bias=self.use_bias,
             activation=self.activation,

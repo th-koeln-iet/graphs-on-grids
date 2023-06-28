@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from gog.structure.graph import StaticGraphDataset, GraphList, Graph
+from graphs_on_grids.structure.graph import StaticGraphDataset, GraphList, Graph
 
 
 def create_train_test_split(

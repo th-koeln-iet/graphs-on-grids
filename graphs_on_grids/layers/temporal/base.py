@@ -1,7 +1,7 @@
 import numpy as np
 
-from gog.layers import GraphConvolution
-from gog.layers.temporal.temporal_layer import (
+from graphs_on_grids.layers import GraphBase
+from graphs_on_grids.layers.temporal.temporal_layer import (
     TemporalConv,
     GraphLSTM,
     GraphGRU,
@@ -9,25 +9,25 @@ from gog.layers.temporal.temporal_layer import (
 )
 
 
-class GraphConvTemporalConv(TemporalConv):
+class GraphBaseTemporalConv(TemporalConv):
     """
-    Implementation of a `TemporalConv` layer using a `GraphConvolution` layer as graph layer.
+    Implementation of a `TemporalConv` layer using a `GraphBase` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        output_seq_len,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        output_seq_len: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -44,7 +44,7 @@ class GraphConvTemporalConv(TemporalConv):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphConvTemporalConv, self).__init__(
+        super(GraphBaseTemporalConv, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             output_seq_len=output_seq_len,
@@ -60,7 +60,7 @@ class GraphConvTemporalConv(TemporalConv):
 
     def build(self, input_shape):
         super().build(input_shape=input_shape)
-        self.graph_layer = GraphConvolution(
+        self.graph_layer = GraphBase(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
@@ -74,24 +74,24 @@ class GraphConvTemporalConv(TemporalConv):
         )
 
 
-class GraphConvolutionLSTM(GraphLSTM):
+class GraphBaseLSTM(GraphLSTM):
     """
-    Implementation of a `GraphLSTM` layer using a `GraphConvolution` layer as graph layer.
+    Implementation of a `GraphLSTM` layer using a `GraphBase` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -107,7 +107,7 @@ class GraphConvolutionLSTM(GraphLSTM):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphConvolutionLSTM, self).__init__(
+        super(GraphBaseLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -122,7 +122,7 @@ class GraphConvolutionLSTM(GraphLSTM):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphConvolution(
+        self.graph_layer = GraphBase(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
@@ -136,24 +136,24 @@ class GraphConvolutionLSTM(GraphLSTM):
         )
 
 
-class GraphConvolutionGRU(GraphGRU):
+class GraphBaseGRU(GraphGRU):
     """
-    Implementation of a `GraphGRU` layer using a `GraphConvolution` layer as graph layer.
+    Implementation of a `GraphGRU` layer using a `GraphBase` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -169,7 +169,7 @@ class GraphConvolutionGRU(GraphGRU):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphConvolutionGRU, self).__init__(
+        super(GraphBaseGRU, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -184,7 +184,7 @@ class GraphConvolutionGRU(GraphGRU):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphConvolution(
+        self.graph_layer = GraphBase(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,
@@ -198,24 +198,24 @@ class GraphConvolutionGRU(GraphGRU):
         )
 
 
-class GraphConvolutionConvLSTM(GraphConvLSTM):
+class GraphBaseConvLSTM(GraphConvLSTM):
     """
-    Implementation of a `GraphConvLSTM` layer using a `GraphConvolution` layer as graph layer.
+    Implementation of a `GraphConvLSTM` layer using a `GraphBase` layer as graph layer.
     See the [documentation](/usage/temporal_layers) on how temporal layers work.
     """
 
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str | None = "glorot_uniform",
+        weight_regularizer: str | None = None,
+        bias_initializer: str | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -231,7 +231,7 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
         :param weight_regularizer: Weight regularizer to be used within the layer
         :param bias_initializer: Bias initializer to be used within the layer
         """
-        super(GraphConvolutionConvLSTM, self).__init__(
+        super(GraphBaseConvLSTM, self).__init__(
             adjacency_matrix=adjacency_matrix,
             embedding_size=embedding_size,
             hidden_units_node=hidden_units_node,
@@ -246,7 +246,7 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
 
     def build(self, input_shape):
         super().build(input_shape)
-        self.graph_layer = GraphConvolution(
+        self.graph_layer = GraphBase(
             adjacency_matrix=self.adjacency_matrix,
             embedding_size=self.embedding_size,
             hidden_units_node=self.hidden_units_node,

@@ -3,8 +3,8 @@ import pytest
 import tensorflow as tf
 from tensorflow import keras
 
-import gog
-from gog.layers import (
+import graphs_on_grids as gog
+from graphs_on_grids.layers import (
     GraphLayer,
     GraphBase,
     GraphConvolution,
@@ -17,8 +17,7 @@ from gog.layers import (
     GraphBaseTemporalConv,
     GraphBaseConvLSTM,
 )
-from gog.preprocessing import create_train_test_split_windowed
-from gog.preprocessing import create_train_test_split, mask_features
+from graphs_on_grids.preprocessing import create_train_test_split, mask_features, create_train_test_split_windowed
 from test.testUtils import create_graph_dataset
 
 

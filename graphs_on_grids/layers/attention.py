@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-from gog.layers.graph_layer import GraphLayer
+from graphs_on_grids.layers.graph_layer import GraphLayer
 
 
 class GraphAttention(GraphLayer):
