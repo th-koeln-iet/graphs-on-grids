@@ -3,13 +3,13 @@ Here are some examples on how to define models using the framework's custom laye
 ## Standard graphs using the Sequential-API
 If graphs only contain node features, the simplest way to define a model is through the [Sequential-API](https://www.tensorflow.org/guide/keras/sequential_model).
 
-Here is a minimal example for the Sequential-API. Layers of the package `gog.layers` are not only stackable with each 
+Here is a minimal example for the Sequential-API. Layers of the package `graphs_on_grids.layers` are not only stackable with each 
 other, but can also be combined with other Keras layers such as BatchNormalization or Dropout.
 
 Note however, that these Keras layers may not be necessary since each graph layer uses BatchNormalization and Dropout
 when computing new node embeddings. 
 ```python
-import gog
+import graphs_on_grids as gog
 from tensorflow import keras
 
 model = keras.models.Sequential([
@@ -30,7 +30,7 @@ This is especially useful when **edge features** are present, since the Sequenti
 The following example shows how to handle this case by using a simple Python function.
 
 ```python
-from gog.layers import GraphAttention
+from graphs_on_grids.layers import GraphAttention
 from tensorflow import keras
 
 def create_attn_model_edge():

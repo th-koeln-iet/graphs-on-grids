@@ -1,2 +1,2 @@
 In-built preprocessing functions to handle graph data.
-::: gog.preprocessing.preprocessing
+::: graphs_on_grids.preprocessing.preprocessing

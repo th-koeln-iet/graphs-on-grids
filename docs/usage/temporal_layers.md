@@ -17,9 +17,9 @@ Temporal layers can be either of the following TF/Keras layers:
 
 Graph layers can be either of:
 
-- [GraphBase](../../layers/static_layers#gog.layers.base.GraphBase)
-- [GraphConvolution](../../layers/static_layers#gog.layers.conv.GraphConvolution)
-- [GraphAttention](../../layers/static_layers#gog.layers.attention.GraphAttention)
+- [GraphBase](../../layers/static_layers#graphs_on_grids.layers.base.GraphBase)
+- [GraphConvolution](../../layers/static_layers#graphs_on_grids.layers.conv.GraphConvolution)
+- [GraphAttention](../../layers/static_layers#graphs_on_grids.layers.attention.GraphAttention)
 
 Spatio-temporal blocks can be stacked and work for graphs that only contain node features, as well as graphs
 with both node and edge features.
@@ -53,7 +53,7 @@ transformed by the graph layer. The output is again _(batch_size * seq_len, n_no
 The second recurrent layer works a bit differently, in that it receives the flattened node feature matrix as input. This
 captures the change of all features across the whole graph instead of node-level information. Since the used recurrent
 layers, are limited to single-step predictions out-of-the-box, the 
-[RecurrentOutputBlock](../../layers/temporal_layers/#gog.layers.temporal.output_layer.RecurrentOutputBlock)
+[RecurrentOutputBlock](../../layers/temporal_layers/#graphs_on_grids.layers.temporal.output_layer.RecurrentOutputBlock)
 is required at the model output to produce an output sequence containing multiple graphs.
 
 **NOTE**: The mentioned dimensionalities do not apply to the `GraphConvLSTM` since it uses a 5D input instead of 3D. It 
@@ -63,9 +63,9 @@ using the same dimensions as described for the `Spatio-Temporal Convolution Bloc
 ## Output Blocks
 Since the procedure of spatio-temporal blocks is unique, the framework provides two output layers:
 
-- [ConvOutputBlock](../../layers/temporal_layers/#gog.layers.temporal.output_layer.ConvOutputBlock) to be used with 
+- [ConvOutputBlock](../../layers/temporal_layers/#graphs_on_grids.layers.temporal.output_layer.ConvOutputBlock) to be used with 
 `Convolutional Spatio-Temporral Blocks`
-- [RecurrentOutputBlock](../../layers/temporal_layers/#gog.layers.temporal.output_layer.RecurrentOutputBlock) to be used
+- [RecurrentOutputBlock](../../layers/temporal_layers/#graphs_on_grids.layers.temporal.output_layer.RecurrentOutputBlock) to be used
 with `Recurrent Spatio-Temporal Blocks`
 
 For their exact functionality, check the respective documentations.

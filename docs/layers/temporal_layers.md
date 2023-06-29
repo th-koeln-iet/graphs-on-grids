@@ -1,15 +1,15 @@
-::: gog.layers.temporal.base
+::: graphs_on_grids.layers.temporal.base
     options:
       show_root_heading: true
 
-::: gog.layers.temporal.conv
+::: graphs_on_grids.layers.temporal.conv
     options:
       show_root_heading: true
 
-::: gog.layers.temporal.attention
+::: graphs_on_grids.layers.temporal.attention
     options:
       show_root_heading: true
 
-::: gog.layers.temporal.output_layer
+::: graphs_on_grids.layers.temporal.output_layer
     options:
       show_root_heading: true

@@ -15,7 +15,7 @@ provides tools to model standard as well as graph time-series problems.
 Within the framework, graphs are organized in a `StaticGraphDataset` class. Each graph in the dataset needs to have
 the same structure as in number of nodes, edges and equal edge connectivity (isomorphic graphs).
 
-Each graph is mapped to a `gog.structure.Graph` object and contains its `node_features` and `edge_features`. Additionally,
+Each graph is mapped to a `graphs_on_grids.structure.Graph` object and contains its `node_features` and `edge_features`. Additionally,
 they contain information about the number of nodes and edges in a graph. Graph objects however
 do not contain the adjacency matrix, which is instead saved in the `StaticGraphDataset` class to avoid duplicate information
 for each graph in the dataset.

@@ -3,14 +3,14 @@ This page describes a possible workflow powered by the framework. Make sure to s
 ## Initializing the dataset
 
 The first step is to convert a tabular dataset from a pandas `DataFrame` object to a `StaticGraphDataset`.
-The data format is described in the [documentation](../../structure/#gog.structure.graph.StaticGraphDataset) of the dataset
+The data format is described in the [documentation](../../structure/#graphs_on_grids.structure.graph.StaticGraphDataset) of the dataset
 class.
 
 The code to create an instance of `StaticGraphDataset` may look like this:
 
 ```python
 import pandas as pd
-from gog.structure import StaticGraphDataset
+from graphs_on_grids.structure import StaticGraphDataset
 
 # initialize edge list with some values 
 edge_list = ...
@@ -39,17 +39,17 @@ workflows that will be shown.
 #### Splitting the data
 A mandatory step in every ML task, is to split the dataset into a training and test set.
 If each graph is to be treated as an individual instance, the method 
-[create_train_test_split()](../../preprocessing/#gog.preprocessing.preprocessing.create_train_test_split) can be used as seen
+[create_train_test_split()](../../preprocessing/#graphs_on_grids.preprocessing.preprocessing.create_train_test_split) can be used as seen
 here: 
 
 ```python
-from gog.preprocessing import create_train_test_split
+from graphs_on_grids.preprocessing import create_train_test_split
 train, test = create_train_test_split(dataset)
 ```
 #### Scaling the data
 An optional step is to scale the data. This is easily done by calling
 ```python
-from gog.preprocessing import apply_scaler
+from graphs_on_grids.preprocessing import apply_scaler
 train, test = apply_scaler(dataset)
 
 # if edge features are present you will also need to call the function with the target parameter set to "edge"
@@ -61,7 +61,7 @@ The next step is to mask the input data. Here we can select which nodes and whic
 
 ```python
 import numpy as np
-from gog.preprocessing import mask_features
+from graphs_on_grids.preprocessing import mask_features
 
 features = ["A", "B"]
 nodes_to_mask = np.arange(0, 3)
@@ -70,17 +70,17 @@ masked_train, masked_test = mask_features(train, test, features, nodes_to_mask)
 
 #### Creating a validation set
 If you want to have a validation set, to monitor the generalization performance of the model, you can use the in-built
-function [create_validation_set()](../../preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
+function [create_validation_set()](../../preprocessing/#graphs_on_grids.preprocessing.preprocessing.create_validation_set).
 
 ```python
-from gog.preprocessing import create_validation_set
+from graphs_on_grids.preprocessing import create_validation_set
 X_train, X_val, y_train, y_val = create_validation_set(masked_train, train)
 ```
 
 
 #### Converting the data to numpy
 In order to be able to train a model with our data, it needs to a format that TensorFlow can process. Luckily, calling
-[to_numpy()](../../structure/#gog.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
+[to_numpy()](../../structure/#graphs_on_grids.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
 
 ```python
 X_train = X_train.to_numpy()
@@ -95,18 +95,18 @@ y_val = y_val.to_numpy()
 #### Splitting the data
 If the data contains time-series information, often times a rolling window has to be created from the data. This task is
 combined with splitting the dataset with the function
-[create_train_test_split_windowed()](../../preprocessing/#gog.preprocessing.preprocessing.create_train_test_split_windowed)
+[create_train_test_split_windowed()](../../preprocessing/#graphs_on_grids.preprocessing.preprocessing.create_train_test_split_windowed)
 and can be used like:
 
 ```python
-from gog.preprocessing import create_train_test_split_windowed
+from graphs_on_grids.preprocessing import create_train_test_split_windowed
 X_train, y_train, X_test, y_test = create_train_test_split_windowed(dataset, window_size=30, len_labels=3)
 ```
 
 #### Scaling the data
 An optional step is to scale the data. This is easily done by calling 
 ```python
-from gog.preprocessing import apply_scaler
+from graphs_on_grids.preprocessing import apply_scaler
 train, test = apply_scaler(dataset)
 
 # if edge features are present you will also need to call the function with the target parameter set to "edge"
@@ -118,7 +118,7 @@ The next step is to mask the input data. Here we can select which nodes and whic
 
 ```python
 import numpy as np
-from gog.preprocessing import mask_features
+from graphs_on_grids.preprocessing import mask_features
 
 features = ["A", "B"]
 nodes_to_mask = np.arange(0, 3)
@@ -127,17 +127,17 @@ X_train, X_test = mask_features(X_train, X_test, features, nodes_to_mask)
 
 #### Creating a validation set
 If you want to have a validation set, to monitor the generalization performance of the model, you can use the in-built
-function [create_validation_set()](../../preprocessing/#gog.preprocessing.preprocessing.create_validation_set).
+function [create_validation_set()](../../preprocessing/#graphs_on_grids.preprocessing.preprocessing.create_validation_set).
 
 ```python
-from gog.preprocessing import create_validation_set
+from graphs_on_grids.preprocessing import create_validation_set
 X_train, X_val, y_train, y_val = create_validation_set(X_train, y_train)
 ```
 
 
 #### Converting the data to numpy
 In order to be able to train a model with our data, it needs to a format that TensorFlow can process. Luckily, calling
-[to_numpy()](../../structure/#gog.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
+[to_numpy()](../../structure/#graphs_on_grids.structure.graph.GraphList.to_numpy) on any data split, will generate exactly that.
 
 ```python
 X_train = X_train.to_numpy()
@@ -180,7 +180,7 @@ and want to manually check which values our model is predicting, we can access t
 instance.
 
 ```python
-from gog.metrics import mean_squared_error
+from graphs_on_grids.metrics import mean_squared_error
 X_test = X_test.to_numpy()
 y_test = y_test.to_numpy()
 
