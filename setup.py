@@ -24,12 +24,12 @@ setup(
         "graphs_on_grids.structure",
     ],
     install_requires=[
-        'numpy~=1.23.5',
-        'tensorflow~=2.12.0',
-        'pandas~=2.0.1',
-        'scikit-learn==1.2.2',
-        'pytest==7.3.1',
-        'tqdm~=4.65.0',
+        "numpy~=1.23.5",
+        "tensorflow~=2.12.0",
+        "pandas~=2.0.1",
+        "scikit-learn==1.2.2",
+        "pytest==7.3.1",
+        "tqdm~=4.65.0",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
