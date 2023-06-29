@@ -104,7 +104,12 @@ class TestLayers:
                 ),
                 keras.layers.BatchNormalization(),
                 keras.layers.ReLU(),
-                gog.layers.GraphBase(adj, embedding_size, hidden_units_node=[8, 8, 4]),
+                gog.layers.GraphBase(
+                    adj,
+                    embedding_size,
+                    hidden_units_node=[8, 8, 4],
+                    weight_initializer=keras.initializers.GlorotUniform(seed=10),
+                ),
                 keras.layers.BatchNormalization(),
                 keras.layers.ReLU(),
                 keras.layers.Dense(self.n_features),
