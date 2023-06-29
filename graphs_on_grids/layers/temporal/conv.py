@@ -1,5 +1,6 @@
 import numpy as np
 
+from tensorflow import keras
 from graphs_on_grids.layers import GraphConvolution
 from graphs_on_grids.layers.temporal.temporal_layer import (
     TemporalConv,
@@ -18,16 +19,18 @@ class GraphConvTemporalConv(TemporalConv):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        output_seq_len,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        output_seq_len: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -83,15 +86,17 @@ class GraphConvolutionLSTM(GraphLSTM):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -145,15 +150,17 @@ class GraphConvolutionGRU(GraphGRU):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -207,15 +214,17 @@ class GraphConvolutionConvLSTM(GraphConvLSTM):
     def __init__(
         self,
         adjacency_matrix: np.ndarray,
-        embedding_size,
-        hidden_units_node=None,
-        hidden_units_edge=None,
-        dropout_rate=0,
-        use_bias=True,
-        activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        embedding_size: int,
+        hidden_units_node: list | tuple = None,
+        hidden_units_edge: list | tuple = None,
+        dropout_rate: int | float = 0,
+        use_bias: bool = True,
+        activation: str | None = None,
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model

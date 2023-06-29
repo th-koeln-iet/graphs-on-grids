@@ -14,9 +14,11 @@ class TemporalConv(keras.layers.Layer):
         dropout_rate=0,
         use_bias=True,
         activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         super(TemporalConv, self).__init__()
         self.output_seq_len = output_seq_len
@@ -133,9 +135,11 @@ class GraphLSTM(keras.layers.Layer):
         dropout_rate=0,
         use_bias=True,
         activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         super(GraphLSTM, self).__init__()
         self.adjacency_matrix = adjacency_matrix
@@ -308,9 +312,11 @@ class GraphGRU(keras.layers.Layer):
         dropout_rate=0,
         use_bias=True,
         activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         super(GraphGRU, self).__init__()
         self.adjacency_matrix = adjacency_matrix
@@ -483,9 +489,11 @@ class GraphConvLSTM(keras.layers.Layer):
         dropout_rate=0,
         use_bias=True,
         activation=None,
-        weight_initializer="glorot_uniform",
-        weight_regularizer=None,
-        bias_initializer="zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         super(GraphConvLSTM, self).__init__()
         self.adjacency_matrix = adjacency_matrix

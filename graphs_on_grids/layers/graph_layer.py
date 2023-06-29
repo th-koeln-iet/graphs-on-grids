@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -13,9 +15,11 @@ class GraphLayer(keras.layers.Layer):
         dropout_rate: int | float = 0,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ) -> None:
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -66,6 +70,10 @@ class GraphLayer(keras.layers.Layer):
         self.use_bias = use_bias
         self.activation = keras.activations.get(activation)
         self.weight_initializer = keras.initializers.get(weight_initializer)
+        if hasattr(self.weight_initializer, "seed"):
+            self.current_weight_init_seed = self.weight_initializer.seed or 42
+            self.weight_initializer.seed = self.current_weight_init_seed
+
         self.weight_regularizer = keras.regularizers.get(weight_regularizer)
         self.bias_initializer = keras.initializers.get(bias_initializer)
 
@@ -99,11 +107,24 @@ class GraphLayer(keras.layers.Layer):
 
     def create_hidden_layers(self, hidden_units, use_batch_norm=True):
         mlp_layers = []
+        current_weight_init = None
         for n_neurons in hidden_units:
+            if hasattr(self.weight_initializer, "seed"):
+                self.weight_initializer = copy.deepcopy(self.weight_initializer)
+                self.weight_initializer.seed = self.current_weight_init_seed
+                current_weight_init = self.weight_initializer
             setattr(
                 self,
                 f"dense_{self.mlp_layer_index}",
-                keras.layers.Dense(n_neurons),
+                keras.layers.Dense(
+                    n_neurons,
+                    use_bias=self.use_bias,
+                    kernel_initializer=current_weight_init
+                    if current_weight_init
+                    else self.weight_initializer,
+                    bias_initializer=self.bias_initializer,
+                    kernel_regularizer=self.weight_regularizer,
+                ),
             )
             mlp_layers.append(getattr(self, f"dense_{self.mlp_layer_index}"))
 
@@ -125,6 +146,8 @@ class GraphLayer(keras.layers.Layer):
             setattr(self, f"relu_{self.mlp_layer_index}", keras.layers.ReLU())
             mlp_layers.append(getattr(self, f"relu_{self.mlp_layer_index}"))
             self.mlp_layer_index += 1
+            if hasattr(self, "current_weight_init_seed"):
+                self.current_weight_init_seed += 1
         return mlp_layers
 
     def calculate_edge_feature_indices(self):

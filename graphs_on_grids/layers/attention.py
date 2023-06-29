@@ -30,9 +30,11 @@ class GraphAttention(GraphLayer):
         dropout_rate: int | float = 0,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -153,9 +155,11 @@ class MultiHeadGraphAttention(GraphLayer):
         num_heads: int = 3,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
         concat_heads: bool = True,
     ):
         """

@@ -1,5 +1,6 @@
 import numpy as np
 
+from tensorflow import keras
 from graphs_on_grids.layers import GraphBase
 from graphs_on_grids.layers.temporal.temporal_layer import (
     TemporalConv,
@@ -25,9 +26,11 @@ class GraphBaseTemporalConv(TemporalConv):
         dropout_rate: int | float = 0,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -89,9 +92,11 @@ class GraphBaseLSTM(GraphLSTM):
         dropout_rate: int | float = 0,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -151,9 +156,11 @@ class GraphBaseGRU(GraphGRU):
         dropout_rate: int | float = 0,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
@@ -213,9 +220,11 @@ class GraphBaseConvLSTM(GraphConvLSTM):
         dropout_rate: int | float = 0,
         use_bias: bool = True,
         activation: str | None = None,
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model

@@ -17,7 +17,11 @@ from graphs_on_grids.layers import (
     GraphBaseTemporalConv,
     GraphBaseConvLSTM,
 )
-from graphs_on_grids.preprocessing import create_train_test_split, mask_features, create_train_test_split_windowed
+from graphs_on_grids.preprocessing import (
+    create_train_test_split,
+    mask_features,
+    create_train_test_split_windowed,
+)
 from test.testUtils import create_graph_dataset
 
 
@@ -92,7 +96,12 @@ class TestLayers:
         model = tf.keras.models.Sequential(
             [
                 keras.layers.Input((self.n_nodes, self.n_features)),
-                gog.layers.GraphBase(adj, embedding_size, hidden_units_node=[8, 8, 4]),
+                gog.layers.GraphBase(
+                    adj,
+                    embedding_size,
+                    hidden_units_node=[8, 8, 4],
+                    weight_initializer="zeros",
+                ),
                 keras.layers.BatchNormalization(),
                 keras.layers.ReLU(),
                 gog.layers.GraphBase(adj, embedding_size, hidden_units_node=[8, 8, 4]),

@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
 from graphs_on_grids.layers.graph_layer import GraphLayer
 
@@ -22,9 +23,11 @@ class GraphBase(GraphLayer):
         use_bias: bool = True,
         activation: str | None = None,
         aggregation_method: str = "sum",
-        weight_initializer: str | None = "glorot_uniform",
-        weight_regularizer: str | None = None,
-        bias_initializer: str | None = "zeros",
+        weight_initializer: str
+        | keras.initializers.Initializer
+        | None = "glorot_uniform",
+        weight_regularizer: str | keras.regularizers.Regularizer | None = None,
+        bias_initializer: str | keras.initializers.Initializer | None = "zeros",
     ):
         """
         :param adjacency_matrix: adjacency matrix of the graphs to be passed to the model
