@@ -169,7 +169,7 @@ class TestLayers:
         self._execute_layer_test(model)
 
     def _execute_layer_test(self, model):
-        model.compile(optimizer=self.optimizer, loss=self.loss_fn, run_eagerly=True)
+        model.compile(optimizer=self.optimizer, loss=self.loss_fn)
         model.fit(
             self.X_train, self.y_train, epochs=self.EPOCHS, batch_size=self.BATCH_SIZE
         )

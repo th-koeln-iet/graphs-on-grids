@@ -210,7 +210,7 @@ class GraphLayer(keras.layers.Layer):
         )
         # contains concatenation of neighbor node pair features and corresponding edge features
         # if a pair contains a self-loop, the edge feature vector is zeroed.
-        # Shape (batch_size, |E| + |V|, 2 * |X_v| + |E|)
+        # Shape (batch_size, |E| + |V|, |X_v| + |X_e|)
         node_states_expanded = tf.concat([node_states_expanded, edge_features], axis=2)
         return node_states_expanded
 

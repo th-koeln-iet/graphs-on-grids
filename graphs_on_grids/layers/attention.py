@@ -101,7 +101,7 @@ class GraphAttention(GraphLayer):
         # Normalize attention scores
         attention_scores = tf.math.exp(tf.clip_by_value(attention_scores, -2, 2))
         attention_scores_sum = tf.math.unsorted_segment_sum(
-            data=attention_scores[-1, :],
+            data=tf.reduce_mean(attention_scores, axis=0),
             segment_ids=self.edges[:, 0],
             num_segments=tf.reduce_max(self.edges[:, 0]) + 1,
         )
@@ -111,10 +111,10 @@ class GraphAttention(GraphLayer):
         attention_scores_norm = attention_scores / attention_scores_sum
 
         # apply attention scores and aggregate
-        # last attention score can be taken since the attention values are equal for the whole batch
+        # attention scores are averaged for the whole batch
         # write normalized attention scores to position where adjacency_matrix equals one
         weighted_adj = tf.tensor_scatter_nd_update(
-            self._A_tilde, self.edges, attention_scores_norm[-1]
+            self._A_tilde, self.edges, tf.reduce_mean(attention_scores_norm, axis=0)
         )
         output = tf.matmul(weighted_adj, node_states_transformed)
 

@@ -63,6 +63,7 @@ class GraphConvolution(GraphLayer):
 
         # Inverse of square root of degree matrix
         self._D_mod = tf.linalg.inv(tf.linalg.sqrtm(D))
+        self._A_hat = tf.matmul(tf.matmul(self._D_mod, self._A_tilde), self._D_mod)
 
     def build(self, input_shape):
         if len(input_shape) == 2:
@@ -97,11 +98,11 @@ class GraphConvolution(GraphLayer):
                 self.adjacency_matrix, self.edges, edge_weights_avg
             )
             self._A_tilde = weighted_adj_matrix
+            self._A_hat = tf.matmul(tf.matmul(self._D_mod, self._A_tilde), self._D_mod)
         else:
             node_features = inputs
 
-        A_hat = tf.matmul(tf.matmul(self._D_mod, self._A_tilde), self._D_mod)
-        masked_feature_matrix = tf.matmul(A_hat, node_features)
+        masked_feature_matrix = tf.matmul(self._A_hat, node_features)
 
         output = self.node_feature_MLP(masked_feature_matrix)
 
