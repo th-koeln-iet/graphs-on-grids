@@ -344,7 +344,6 @@ class GraphGRU(keras.layers.Layer):
                 return_sequences=True,
             )
 
-
     def call(self, inputs, *args, **kwargs):
         if isinstance(inputs, list):
             (
