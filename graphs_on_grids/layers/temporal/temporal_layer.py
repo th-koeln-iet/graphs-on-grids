@@ -553,7 +553,6 @@ class GraphConvLSTM(keras.layers.Layer):
             )
 
         # add empty channel dimension
-        node_features = tf.transpose(node_features, [2, 0, 1, 3])
         lstm_input = tf.expand_dims(node_features, axis=-1)
 
         # remove channel dimension before graph layer
