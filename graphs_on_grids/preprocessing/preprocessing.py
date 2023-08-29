@@ -92,9 +92,10 @@ def create_train_test_split_windowed(
             labels.append(label_window)
             windows.append(current_window)
         start = start + step
-    if num_graphs != len(windows) * window_size:
+    discarded_graphs = num_graphs - 1 - labels[-1][-1].ID
+    if discarded_graphs != 0:
         logging.warning(
-            f"Dataset of size {num_graphs}, cannot be cleanly divided with window size {window_size}. Discarded {num_graphs - len(windows) * window_size} graph instances."
+            f"Dataset of size {num_graphs}, cannot be cleanly divided with window size {window_size}. Discarded {discarded_graphs} graph instances."
         )
     dataset.graphs = windows
     dataset.graphs.strict_checks = False
