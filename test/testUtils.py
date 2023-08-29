@@ -139,7 +139,9 @@ def _create_edge_list(num_nodes):
 
 def contains_back_direction(current_idx, targets, edges, edges_per_node):
     for target in targets:
-        edges_tmp = edges[target * edges_per_node : target * edges_per_node + 3]
+        edges_tmp = edges[
+            target * edges_per_node : target * edges_per_node + edges_per_node
+        ]
         if edges_tmp:
             edges_tmp = np.array(edges_tmp)[:, 1]
             if current_idx in edges_tmp:

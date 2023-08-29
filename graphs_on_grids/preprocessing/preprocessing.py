@@ -159,24 +159,25 @@ def apply_scaler(
             test[0].to_pandas(),
             test[1].to_pandas(),
         )
-        if target == "node":
-            X_train, y_train, X_test, y_test = (
-                X_train[0],
-                y_train[0],
-                X_test[0],
-                y_test[0],
-            )
-        elif target == "edge":
-            X_train, y_train, X_test, y_test = (
-                X_train[1],
-                y_train[1],
-                X_test[1],
-                y_test[1],
-            )
-        else:
-            raise ValueError(
-                f"Expected target to be either 'node' or 'edge'. Received {target}"
-            )
+        if isinstance(X_train, List):
+            if target == "node":
+                X_train, y_train, X_test, y_test = (
+                    X_train[0],
+                    y_train[0],
+                    X_test[0],
+                    y_test[0],
+                )
+            elif target == "edge":
+                X_train, y_train, X_test, y_test = (
+                    X_train[1],
+                    y_train[1],
+                    X_test[1],
+                    y_test[1],
+                )
+            else:
+                raise ValueError(
+                    f"Expected target to be either 'node' or 'edge'. Received {target}"
+                )
         train = pd.concat([X_train, y_train], axis=1)
         test = pd.concat([X_test, y_test], axis=1)
 

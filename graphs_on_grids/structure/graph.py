@@ -464,3 +464,6 @@ class StaticGraphDataset:
     @classmethod
     def type(cls):
         return cls.__name__
+
+    def __len__(self):
+        return len(self.graphs)

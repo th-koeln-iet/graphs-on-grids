@@ -107,7 +107,7 @@ X_train, y_train, X_test, y_test = create_train_test_split_windowed(dataset, win
 An optional step is to scale the data. This is easily done by calling 
 ```python
 from graphs_on_grids.preprocessing import apply_scaler
-train, test = apply_scaler(dataset)
+X_train, y_train, X_test, y_test = apply_scaler(dataset)
 
 # if edge features are present you will also need to call the function with the target parameter set to "edge"
 X_train, y_train, X_test, y_test = apply_scaler(dataset, target="edge")

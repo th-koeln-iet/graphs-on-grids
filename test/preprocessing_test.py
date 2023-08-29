@@ -193,6 +193,12 @@ class TestPreprocessingTimeSeries:
         cls.dataset = create_graph_dataset(
             num_graphs=cls.n_graphs, num_features=cls.n_features, num_nodes=cls.n_nodes
         )
+        cls.dataset_node = create_graph_dataset(
+            num_graphs=cls.n_graphs,
+            num_features=cls.n_features,
+            num_nodes=cls.n_nodes,
+            create_edge_features=False,
+        )
         cls.feature_names = cls.dataset.node_feature_names
         cls.n_edges = cls.dataset.graphs.num_edges
 
@@ -212,6 +218,31 @@ class TestPreprocessingTimeSeries:
         assert None not in X_test
 
     def test_apply_scaler_node(self):
+        window_size = 5
+        len_labels = 1
+        create_train_test_split_windowed(
+            self.dataset_node, window_size=window_size, len_labels=len_labels
+        )
+        X_train, X_test, y_train, y_test = apply_scaler(self.dataset_node)
+
+        assert (
+            X_train.shape[0] == len(self.dataset_node.train[0]) * self.n_nodes
+            and X_train.shape[1] == self.n_features * window_size
+        )
+        assert (
+            X_test.shape[0] == len(self.dataset_node.test[0]) * self.n_nodes
+            and X_test.shape[1] == self.n_features * window_size
+        )
+        assert (
+            y_train.shape[0] == len(self.dataset_node.train[1]) * self.n_nodes
+            and y_train.shape[1] == self.n_features * len_labels
+        )
+        assert (
+            y_test.shape[0] == len(self.dataset_node.test[1]) * self.n_nodes
+            and y_test.shape[1] == self.n_features * len_labels
+        )
+
+    def test_apply_scaler_node_w_edge_features_present(self):
         window_size = 5
         len_labels = 1
         create_train_test_split_windowed(
