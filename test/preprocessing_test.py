@@ -224,22 +224,35 @@ class TestPreprocessingTimeSeries:
             self.dataset_node, window_size=window_size, len_labels=len_labels
         )
         X_train, X_test, y_train, y_test = apply_scaler(self.dataset_node)
-
-        assert (
-            X_train.shape[0] == len(self.dataset_node.train[0]) * self.n_nodes
-            and X_train.shape[1] == self.n_features * window_size
+        X_train_np, X_test_np, y_train_np, y_test_np = (
+            X_train.to_numpy(),
+            X_test.to_numpy(),
+            y_train.to_numpy(),
+            y_test.to_numpy(),
         )
         assert (
-            X_test.shape[0] == len(self.dataset_node.test[0]) * self.n_nodes
-            and X_test.shape[1] == self.n_features * window_size
+            X_train_np.shape[0] == len(self.dataset_node.train[0])
+            and X_train_np.shape[1] == window_size
+            and X_train_np.shape[2] == self.n_nodes
+            and X_train_np.shape[3] == self.n_features
         )
         assert (
-            y_train.shape[0] == len(self.dataset_node.train[1]) * self.n_nodes
-            and y_train.shape[1] == self.n_features * len_labels
+            X_test_np.shape[0] == len(self.dataset_node.test[0])
+            and X_test_np.shape[1] == window_size
+            and X_test_np.shape[2] == self.n_nodes
+            and X_test_np.shape[3] == self.n_features
         )
         assert (
-            y_test.shape[0] == len(self.dataset_node.test[1]) * self.n_nodes
-            and y_test.shape[1] == self.n_features * len_labels
+            y_train_np.shape[0] == len(self.dataset_node.train[1])
+            and y_train_np.shape[1] == len_labels
+            and y_train_np.shape[2] == self.n_nodes
+            and y_train_np.shape[3] == self.n_features
+        )
+        assert (
+            y_test_np.shape[0] == len(self.dataset_node.test[1])
+            and y_test_np.shape[1] == len_labels
+            and y_test_np.shape[2] == self.n_nodes
+            and y_test_np.shape[3] == self.n_features
         )
 
     def test_apply_scaler_node_w_edge_features_present(self):
@@ -249,22 +262,63 @@ class TestPreprocessingTimeSeries:
             self.dataset, window_size=window_size, len_labels=len_labels
         )
         X_train, X_test, y_train, y_test = apply_scaler(self.dataset)
+        X_train_np, X_test_np, y_train_np, y_test_np = (
+            X_train.to_numpy(),
+            X_test.to_numpy(),
+            y_train.to_numpy(),
+            y_test.to_numpy(),
+        )
 
+        # Check node feature format
         assert (
-            X_train.shape[0] == len(self.dataset.train[0]) * self.n_nodes
-            and X_train.shape[1] == self.n_features * window_size
+            X_train_np[0].shape[0] == len(self.dataset.train[0])
+            and X_train_np[0].shape[1] == window_size
+            and X_train_np[0].shape[2] == self.n_nodes
+            and X_train_np[0].shape[3] == self.n_features
         )
         assert (
-            X_test.shape[0] == len(self.dataset.test[0]) * self.n_nodes
-            and X_test.shape[1] == self.n_features * window_size
+            X_test_np[0].shape[0] == len(self.dataset.test[0])
+            and X_test_np[0].shape[1] == window_size
+            and X_test_np[0].shape[2] == self.n_nodes
+            and X_test_np[0].shape[3] == self.n_features
         )
         assert (
-            y_train.shape[0] == len(self.dataset.train[1]) * self.n_nodes
-            and y_train.shape[1] == self.n_features * len_labels
+            y_train_np[0].shape[0] == len(self.dataset.train[1])
+            and y_train_np[0].shape[1] == len_labels
+            and y_train_np[0].shape[2] == self.n_nodes
+            and y_train_np[0].shape[3] == self.n_features
         )
         assert (
-            y_test.shape[0] == len(self.dataset.test[1]) * self.n_nodes
-            and y_test.shape[1] == self.n_features * len_labels
+            y_test_np[0].shape[0] == len(self.dataset.test[1])
+            and y_test_np[0].shape[1] == len_labels
+            and y_test_np[0].shape[2] == self.n_nodes
+            and y_test_np[0].shape[3] == self.n_features
+        )
+
+        # Check edge feature format
+        assert (
+            X_train_np[1].shape[0] == len(self.dataset.train[0])
+            and X_train_np[1].shape[1] == window_size
+            and X_train_np[1].shape[2] == self.n_edges
+            and X_train_np[1].shape[3] == self.n_features
+        )
+        assert (
+            X_test_np[1].shape[0] == len(self.dataset.test[0])
+            and X_test_np[1].shape[1] == window_size
+            and X_test_np[1].shape[2] == self.n_edges
+            and X_test_np[1].shape[3] == self.n_features
+        )
+        assert (
+            y_train_np[1].shape[0] == len(self.dataset.train[1])
+            and y_train_np[1].shape[1] == len_labels
+            and y_train_np[1].shape[2] == self.n_edges
+            and y_train_np[1].shape[3] == self.n_features
+        )
+        assert (
+            y_test_np[1].shape[0] == len(self.dataset.test[1])
+            and y_test_np[1].shape[1] == len_labels
+            and y_test_np[1].shape[2] == self.n_edges
+            and y_test_np[1].shape[3] == self.n_features
         )
 
     def test_apply_scaler_edge(self):
@@ -274,22 +328,62 @@ class TestPreprocessingTimeSeries:
             self.dataset, window_size=window_size, len_labels=len_labels
         )
         X_train, X_test, y_train, y_test = apply_scaler(self.dataset, target="edge")
+        X_train_np, X_test_np, y_train_np, y_test_np = (
+            X_train.to_numpy(),
+            X_test.to_numpy(),
+            y_train.to_numpy(),
+            y_test.to_numpy(),
+        )
+        # Check node feature format
+        assert (
+            X_train_np[0].shape[0] == len(self.dataset.train[0])
+            and X_train_np[0].shape[1] == window_size
+            and X_train_np[0].shape[2] == self.n_nodes
+            and X_train_np[0].shape[3] == self.n_features
+        )
+        assert (
+            X_test_np[0].shape[0] == len(self.dataset.test[0])
+            and X_test_np[0].shape[1] == window_size
+            and X_test_np[0].shape[2] == self.n_nodes
+            and X_test_np[0].shape[3] == self.n_features
+        )
+        assert (
+            y_train_np[0].shape[0] == len(self.dataset.train[1])
+            and y_train_np[0].shape[1] == len_labels
+            and y_train_np[0].shape[2] == self.n_nodes
+            and y_train_np[0].shape[3] == self.n_features
+        )
+        assert (
+            y_test_np[0].shape[0] == len(self.dataset.test[1])
+            and y_test_np[0].shape[1] == len_labels
+            and y_test_np[0].shape[2] == self.n_nodes
+            and y_test_np[0].shape[3] == self.n_features
+        )
 
+        # Check edge feature format
         assert (
-            X_train.shape[0] == len(self.dataset.train[0]) * self.n_edges
-            and X_train.shape[1] == self.n_features * window_size
+            X_train_np[1].shape[0] == len(self.dataset.train[0])
+            and X_train_np[1].shape[1] == window_size
+            and X_train_np[1].shape[2] == self.n_edges
+            and X_train_np[1].shape[3] == self.n_features
         )
         assert (
-            X_test.shape[0] == len(self.dataset.test[0]) * self.n_edges
-            and X_test.shape[1] == self.n_features * window_size
+            X_test_np[1].shape[0] == len(self.dataset.test[0])
+            and X_test_np[1].shape[1] == window_size
+            and X_test_np[1].shape[2] == self.n_edges
+            and X_test_np[1].shape[3] == self.n_features
         )
         assert (
-            y_train.shape[0] == len(self.dataset.train[1]) * self.n_edges
-            and y_train.shape[1] == self.n_features * len_labels
+            y_train_np[1].shape[0] == len(self.dataset.train[1])
+            and y_train_np[1].shape[1] == len_labels
+            and y_train_np[1].shape[2] == self.n_edges
+            and y_train_np[1].shape[3] == self.n_features
         )
         assert (
-            y_test.shape[0] == len(self.dataset.test[1]) * self.n_edges
-            and y_test.shape[1] == self.n_features * len_labels
+            y_test_np[1].shape[0] == len(self.dataset.test[1])
+            and y_test_np[1].shape[1] == len_labels
+            and y_test_np[1].shape[2] == self.n_edges
+            and y_test_np[1].shape[3] == self.n_features
         )
 
     def test_mask_labels(self):

@@ -21,6 +21,7 @@ from graphs_on_grids.preprocessing import (
     create_train_test_split,
     mask_features,
     create_train_test_split_windowed,
+    apply_scaler,
 )
 from test.testUtils import create_graph_dataset
 
@@ -38,7 +39,8 @@ class TestLayers:
             create_edge_features=False,
         )
         cls.feature_names = cls.dataset.node_feature_names
-        train, test = create_train_test_split(cls.dataset, shuffle=False)
+        create_train_test_split(cls.dataset, shuffle=False)
+        train, test = apply_scaler(cls.dataset)
         masked_train, masked_test = mask_features(
             train, test, cls.dataset.node_feature_names, np.arange(0, cls.n_nodes // 2)
         )
@@ -195,7 +197,9 @@ class TestLayersWithEdgeFeatures:
         )
         cls.n_edges = cls.dataset.graphs.num_edges
         cls.feature_names = cls.dataset.node_feature_names
-        train, test = create_train_test_split(cls.dataset, shuffle=False)
+        create_train_test_split(cls.dataset, shuffle=False)
+        train, test = apply_scaler(cls.dataset)
+
         masked_train, masked_test = mask_features(
             train, test, cls.dataset.node_feature_names, np.arange(0, cls.n_nodes // 2)
         )
@@ -383,9 +387,10 @@ class TestTemporalLayers:
         cls.window_size = 5
         cls.len_labels = 3
 
-        X_train, X_test, y_train, y_test = create_train_test_split_windowed(
+        create_train_test_split_windowed(
             cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
         )
+        X_train, X_test, y_train, y_test = apply_scaler(cls.dataset)
         masked_train, masked_test = mask_features(
             X_train,
             X_test,
@@ -656,9 +661,10 @@ class TestTemporalLayersWithEdgeFeatures:
         cls.window_size = 5
         cls.len_labels = 3
 
-        X_train, X_test, y_train, y_test = create_train_test_split_windowed(
+        create_train_test_split_windowed(
             cls.dataset, window_size=cls.window_size, len_labels=cls.len_labels
         )
+        X_train, X_test, y_train, y_test = apply_scaler(cls.dataset)
         masked_train, masked_test = mask_features(
             X_train,
             X_test,

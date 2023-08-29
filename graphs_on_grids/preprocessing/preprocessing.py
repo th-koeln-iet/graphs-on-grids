@@ -221,11 +221,7 @@ def apply_scaler(
         _replace_edge_features(num_edges, dataset.test, test)
 
     if is_time_series:
-        X_train_scaled = train[:, : X_train.shape[1]]
-        y_train_scaled = train[:, X_train.shape[1] :]
-        X_test_scaled = test[:, : X_test.shape[1]]
-        y_test_scaled = test[:, X_test.shape[1] :]
-        return X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled
+        return dataset.train[0], dataset.test[0], dataset.train[1], dataset.test[1]
     return dataset.train, dataset.test
 
 
