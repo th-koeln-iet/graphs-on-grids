@@ -181,6 +181,7 @@ def apply_scaler(
                 )
         train = pd.concat([X_train, y_train], axis=1)
         test = pd.concat([X_test, y_test], axis=1)
+        del X_train, X_test, y_train, y_test
 
     if isinstance(train, list) and isinstance(test, list):
         if target == "node":
