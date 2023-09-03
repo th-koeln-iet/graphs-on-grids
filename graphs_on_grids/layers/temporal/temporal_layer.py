@@ -334,7 +334,7 @@ class GraphGRU(keras.layers.Layer):
         )
 
         self.gru_out = keras.layers.GRU(
-            units=num_nodes * self.embedding_size,
+            units=self.embedding_size,
             return_sequences=True,
         )
 
@@ -393,23 +393,34 @@ class GraphGRU(keras.layers.Layer):
             if not isinstance(inputs, list)
             else self.graph_layer([reshaped_node, reshaped_edge])
         )
-
-        # reshape to (batch_size, seq_len, num_nodes, embedding_size)
         output_reshaped = tf.reshape(
             output, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
-
-        # reshape to (batch_size, seq_len, num_nodes * embedding_size)
+        output_reshaped = tf.transpose(output_reshaped, [2, 0, 1, 3])
         output_reshaped = tf.reshape(
-            output_reshaped,
-            shape=(batch_size, seq_len, num_nodes * self.embedding_size),
+            output_reshaped, shape=(batch_size * num_nodes, seq_len, self.embedding_size)
         )
+
+        # # reshape to (batch_size, seq_len, num_nodes, embedding_size)
+        # output_reshaped = tf.reshape(
+        #     output, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
+        # )
+        #
+        # # reshape to (batch_size, seq_len, num_nodes * embedding_size)
+        # output_reshaped = tf.reshape(
+        #     output_reshaped,
+        #     shape=(batch_size, seq_len, num_nodes * self.embedding_size),
+        # )
 
         # output dimension (batch_size, seq_len, num_nodes * embedding_size)
         output_gru = self.gru_out(output_reshaped)
+        output_gru_reshaped = tf.reshape(
+            output_gru, shape=(num_nodes, batch_size, seq_len, self.embedding_size)
+        )
+        output_gru_reshaped = tf.transpose(output_gru_reshaped, perm=[1, 2, 0, 3])
 
         output_gru_reshaped = tf.reshape(
-            output_gru, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
+            output_gru_reshaped, shape=(batch_size, seq_len, num_nodes, self.embedding_size)
         )
         return output_gru_reshaped
 
