@@ -50,9 +50,8 @@ etc. After processing the whole sequence of the layer is returned.
 This sequence is reshaped back into _(batch_size * seq_len, n_nodes, n_node_features)_ for the node features to be 
 transformed by the graph layer. The output is again _(batch_size * seq_len, n_nodes, embedding_size)_. 
 
-The second recurrent layer works a bit differently, in that it receives the flattened node feature matrix as input. This
-captures the change of all features across the whole graph instead of node-level information. Since the used recurrent
-layers, are limited to single-step predictions out-of-the-box, the 
+The second recurrent layer then works the same as the first. Since the used recurrent
+layers are limited to single-step predictions out-of-the-box, the 
 [RecurrentOutputBlock](../../layers/temporal_layers/#graphs_on_grids.layers.temporal.output_layer.RecurrentOutputBlock)
 is required at the model output to produce an output sequence containing multiple graphs.
 
