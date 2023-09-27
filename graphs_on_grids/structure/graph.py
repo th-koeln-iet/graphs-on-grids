@@ -327,7 +327,7 @@ class StaticGraphDataset:
     ) -> GraphList:
         """
         Converts a dataset from a `np.ndarray` to a `GraphList` that can be used to initialize an instance of
-        `StaticGraphDataset`. This is the preferred way of converting data to graphs.
+        `StaticGraphDataset`.
         :param node_features: `np.ndarray` containing node feature data. The array needs to be of shape (n_graphs,
         n_nodes, n_features).
         :param num_nodes: The number of nodes for graphs in the dataset
@@ -338,7 +338,7 @@ class StaticGraphDataset:
         :param edge_feature_names: The edge features to extract from the df_edge_features
         :return: A `GraphList` instance that contains `Graph`-objects containing all relevant data.
         """
-        if edge_features and not edge_feature_names:
+        if edge_features is not None and not edge_feature_names:
             raise ValueError(
                 "Cannot process edge features when their names are not passed via the `edge_feature_names` variable"
             )
@@ -387,7 +387,7 @@ class StaticGraphDataset:
     ) -> GraphList:
         """
         Converts a tabular dataset from a `pd.DataFrame` to a `GraphList` that can be used to initialize an instance of
-        `StaticGraphDataset`. If possible, use the `numpy_to_graphs` instead since it is faster.
+        `StaticGraphDataset`.
         :param df_node_features: `pd.DataFrame` containing node feature data. This function expects all graphs to follow
         the same node order and graphs to be adjacent to each other within the table.<br>
 
@@ -403,49 +403,28 @@ class StaticGraphDataset:
         :param edge_feature_names: The edge features to extract from the df_edge_features
         :return: A `GraphList` instance that contains `Graph`-objects containing all relevant data.
         """
-        edge_feature_names = (
-            edge_feature_names
-            if not edge_feature_names
-            else list(df_edge_features.columns.values)
+        node_features_numpy = (
+            df_node_features[node_feature_names]
+            .to_numpy()
+            .reshape((-1, num_nodes, len(node_feature_names)))
         )
-        graph_list = GraphList(
-            num_nodes=num_nodes,
-            node_feature_names=node_feature_names,
-            num_edges=num_edges,
-            edge_feature_names=edge_feature_names,
+        del df_node_features
+        edge_features_numpy = None
+        if df_edge_features is not None:
+            edge_features_numpy = (
+                df_edge_features[edge_feature_names]
+                .to_numpy()
+                .reshape((-1, num_edges, len(edge_feature_names)))
+            )
+            del df_edge_features
+        graph_list = StaticGraphDataset.numpy_to_graphs(
+            node_features_numpy,
+            num_nodes,
+            node_feature_names,
+            edge_features_numpy,
+            num_edges,
+            edge_feature_names,
         )
-        edge_index = 0
-        graph_id = 0
-        for i in tqdm(
-            range(0, df_node_features.shape[0], num_nodes),
-            desc="Creating graph dataset",
-        ):
-            df_tmp_node_features = df_node_features.iloc[i : i + num_nodes].copy()
-            if df_edge_features is not None:
-                df_tmp_edge_features = df_edge_features.iloc[
-                    edge_index : edge_index + num_edges
-                ].copy()
-                edge_index += num_edges
-                graph_list.append(
-                    Graph(
-                        ID=graph_id,
-                        node_features=df_tmp_node_features,
-                        node_feature_names=node_feature_names,
-                        edge_features=df_tmp_edge_features,
-                        edge_feature_names=edge_feature_names,
-                        n_edges=num_edges,
-                    )
-                )
-            else:
-                graph_list.append(
-                    Graph(
-                        ID=graph_id,
-                        node_features=df_tmp_node_features,
-                        node_feature_names=node_feature_names,
-                        n_edges=num_edges,
-                    )
-                )
-            graph_id += 1
         return graph_list
 
     def _validate_features(self):

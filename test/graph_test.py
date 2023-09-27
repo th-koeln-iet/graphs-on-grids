@@ -1,6 +1,8 @@
+import numpy.testing
 import pytest
 
 from graphs_on_grids.preprocessing import create_train_test_split_windowed
+from graphs_on_grids.structure import StaticGraphDataset
 from test.testUtils import (
     create_graph_dataset,
     create_test_graph,
@@ -27,7 +29,9 @@ class TestGraphs:
             num_nodes=cls.n_nodes,
             create_edge_features=False,
         )
-        cls.feature_names = cls.dataset_node.node_feature_names
+        cls.node_feature_names = cls.dataset_node.node_feature_names
+        cls.edge_feature_names = cls.dataset_node_edge.edge_feature_names
+        cls.n_edges = cls.dataset_node_edge.graphs.num_edges
 
     def test_append_different_node_features_in_graph_list(self):
         graphs = self.dataset_node.graphs
@@ -97,6 +101,65 @@ class TestGraphs:
             graphs.num_edges,
             self.n_features_edge,
         )
+
+    def test_dataset_numpy_to_graphs(self):
+        graphs_as_numpy = self.dataset_node.graphs.to_numpy()
+        converted_graphs = StaticGraphDataset.numpy_to_graphs(
+            graphs_as_numpy, self.n_nodes, self.node_feature_names
+        )
+        assert len(self.dataset_node.graphs) == len(converted_graphs)
+        for graphA, graphB in zip(self.dataset_node.graphs, converted_graphs):
+            numpy.testing.assert_array_equal(graphA.node_features, graphB.node_features)
+
+    def test_dataset_numpy_to_graphs_with_edge_features(self):
+        graphs_as_numpy = self.dataset_node_edge.graphs.to_numpy()
+        converted_graphs = StaticGraphDataset.numpy_to_graphs(
+            graphs_as_numpy[0],
+            self.n_nodes,
+            self.node_feature_names,
+            graphs_as_numpy[1],
+            self.n_edges,
+            self.edge_feature_names,
+        )
+        assert len(self.dataset_node_edge.graphs) == len(converted_graphs)
+        for graphA, graphB in zip(self.dataset_node_edge.graphs, converted_graphs):
+            numpy.testing.assert_array_equal(graphA.node_features, graphB.node_features)
+            numpy.testing.assert_array_equal(graphA.edge_features, graphB.edge_features)
+
+    def test_dataset_numpy_to_graphs_with_edge_features_missing_feature_names(self):
+        graphs_as_numpy = self.dataset_node_edge.graphs.to_numpy()
+        with pytest.raises(ValueError):
+            StaticGraphDataset.numpy_to_graphs(
+                graphs_as_numpy[0],
+                self.n_nodes,
+                self.node_feature_names,
+                graphs_as_numpy[1],
+                self.n_edges,
+            )
+
+    def test_dataset_pandas_to_graphs(self):
+        graphs_as_pandas = self.dataset_node.graphs.to_pandas()
+        converted_graphs = StaticGraphDataset.pandas_to_graphs(
+            graphs_as_pandas, self.n_nodes, self.node_feature_names
+        )
+        assert len(self.dataset_node.graphs) == len(converted_graphs)
+        for graphA, graphB in zip(self.dataset_node.graphs, converted_graphs):
+            numpy.testing.assert_array_equal(graphA.node_features, graphB.node_features)
+
+    def test_dataset_pandas_to_graphs_with_edge_features(self):
+        graphs_as_pandas = self.dataset_node_edge.graphs.to_pandas()
+        converted_graphs = StaticGraphDataset.pandas_to_graphs(
+            graphs_as_pandas[0],
+            self.n_nodes,
+            self.node_feature_names,
+            graphs_as_pandas[1],
+            self.n_edges,
+            self.edge_feature_names,
+        )
+        assert len(self.dataset_node_edge.graphs) == len(converted_graphs)
+        for graphA, graphB in zip(self.dataset_node_edge.graphs, converted_graphs):
+            numpy.testing.assert_array_equal(graphA.node_features, graphB.node_features)
+            numpy.testing.assert_array_equal(graphA.edge_features, graphB.edge_features)
 
 
 class TestGraphsTimeSeries:
