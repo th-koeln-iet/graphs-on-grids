@@ -317,6 +317,66 @@ class StaticGraphDataset:
         self._validate_features()
 
     @staticmethod
+    def numpy_to_graphs(
+        node_features: np.ndarray,
+        num_nodes: int,
+        node_feature_names: List[str],
+        edge_features: np.ndarray = None,
+        num_edges: int = 0,
+        edge_feature_names: List[str] = None,
+    ) -> GraphList:
+        """
+        Converts a dataset from a `np.ndarray` to a `GraphList` that can be used to initialize an instance of
+        `StaticGraphDataset`. This is the preferred way of converting data to graphs.
+        :param node_features: `np.ndarray` containing node feature data. The array needs to be of shape (n_graphs,
+        n_nodes, n_features).
+        :param num_nodes: The number of nodes for graphs in the dataset
+        :param node_feature_names: The node features to extract from df_node_features.
+        :param edge_features: Same as df_node_features but for edge features. Only needed if edge features are
+        present in the graphs. The array needs to be of shape (n_graphs, n_edges, n_features).
+        :param num_edges: The number of edges for graphs in the dataset
+        :param edge_feature_names: The edge features to extract from the df_edge_features
+        :return: A `GraphList` instance that contains `Graph`-objects containing all relevant data.
+        """
+        if edge_features and not edge_feature_names:
+            raise ValueError(
+                "Cannot process edge features when their names are not passed via the `edge_feature_names` variable"
+            )
+        graph_list = GraphList(
+            num_nodes=num_nodes,
+            node_feature_names=node_feature_names,
+            num_edges=num_edges,
+            edge_feature_names=edge_feature_names,
+        )
+        for i in tqdm(
+            range(0, node_features.shape[0]),
+            desc="Creating graph dataset",
+        ):
+            tmp_node_features = node_features[i].copy()
+            if edge_features is not None:
+                tmp_edge_features = edge_features[i].copy()
+                graph_list.append(
+                    Graph(
+                        ID=i,
+                        node_features=tmp_node_features,
+                        node_feature_names=node_feature_names,
+                        edge_features=tmp_edge_features,
+                        edge_feature_names=edge_feature_names,
+                        n_edges=num_edges,
+                    )
+                )
+            else:
+                graph_list.append(
+                    Graph(
+                        ID=i,
+                        node_features=tmp_node_features,
+                        node_feature_names=node_feature_names,
+                        n_edges=num_edges,
+                    )
+                )
+        return graph_list
+
+    @staticmethod
     def pandas_to_graphs(
         df_node_features: pd.DataFrame,
         num_nodes: int,
@@ -327,7 +387,7 @@ class StaticGraphDataset:
     ) -> GraphList:
         """
         Converts a tabular dataset from a `pd.DataFrame` to a `GraphList` that can be used to initialize an instance of
-        `StaticGraphDataset`
+        `StaticGraphDataset`. If possible, use the `numpy_to_graphs` instead since it is faster.
         :param df_node_features: `pd.DataFrame` containing node feature data. This function expects all graphs to follow
         the same node order and graphs to be adjacent to each other within the table.<br>
 
