@@ -1,5 +1,5 @@
-mkdocs==1.4.3
-mkdocs-material==9.1.16
-mkdocstrings-python==1.1.2
+mkdocs==1.5.3
+mkdocs-material==9.4.3
+mkdocstrings-python==1.7.1
 python-markdown-math==0.8
-Pygments==2.15.1
+Pygments==2.16
